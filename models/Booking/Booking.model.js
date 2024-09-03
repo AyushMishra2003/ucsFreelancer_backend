@@ -75,6 +75,10 @@ const BookingSchema = new Schema({
     phoneNumber: { type: String },
     email: { type: String },
     carNumber: { type: String },
+    isActive:{
+      type:Boolean,
+      default:false
+    }
   }],
   bookingDate: {
     type: Date,

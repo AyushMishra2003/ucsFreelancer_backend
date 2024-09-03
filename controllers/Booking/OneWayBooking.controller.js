@@ -106,6 +106,10 @@ const addOneWayBooking = async (req, res, next) => {
     } = req.body;
 
 
+    console.log("req.body",req.body);
+    
+
+
     const now = new Date();
     if (!bookingDate) {
       bookingDate = getLocalDate() // YYYY-MM-DD format
@@ -116,7 +120,14 @@ const addOneWayBooking = async (req, res, next) => {
     
     // Validate required fields
 
+    console.log(fromLocation,toLocation,tripType,category,bookingDate,bookingTime,pickupDate,pickupTime,email,pickupAddress,dropAddress,paymentMode);
+
     if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress || !paymentMode) {
+
+      console.log("kya mai chala kya bhai");
+
+      
+      
       return next(new AppError("All required fields must be provided", 400));
     }
 
@@ -307,6 +318,7 @@ const addOneWayBooking = async (req, res, next) => {
         name,
         email,
         phoneNumber,
+        password:phoneNumber,
         bookingHistory: [booking._id]
       });
 
@@ -854,6 +866,9 @@ const driverDetail = async (req, res, next) => {
     const { name, email, phoneNumber, carNumber } = req.body;
     const { id } = req.params;
 
+    console.log(req.body);
+    
+
     if (!name || !email || !phoneNumber) {
       return next(new AppError("All fields are required", 400));
     }
@@ -865,17 +880,25 @@ const driverDetail = async (req, res, next) => {
     }
 
     if (validBooking.status !== "confirmed") {
-      return next(new AppError("Booking is not Valid", 400));
+      return next(new AppError("Booking is not valid", 400));
     }
 
-    // Overwrite driver details
-    validBooking.driverDetails = {
+    // Deactivate old driver details
+    validBooking.driverDetails.forEach(driver => {
+      driver.isActive = false;
+    });
+
+    // Add new driver details as active
+    validBooking.driverDetails.push({
       name,
       phoneNumber,
       email,
-      carNumber
-    };
+      carNumber,
+      isActive: true,
+      updatedAt: new Date()
+    });
 
+    // Send email to user
     const subject = 'Your Driver Details Have Been Updated';
     const text = `Dear Customer,
     Your driver details have been updated successfully.
@@ -889,9 +912,11 @@ Thank you for using our service.
 Best regards,
 The Team`;
 
-const validUser=await User.findById(validBooking.userId)
+    const validUser = await User.findById(validBooking.userId);
 
-await sendEmail(validUser.email,subject,text)
+    if (validUser && validUser.email) {
+      await sendEmail(validUser.email, subject, text);
+    }
 
     await validBooking.save();
 
@@ -904,6 +929,7 @@ await sendEmail(validUser.email,subject,text)
     return next(new AppError(error.message, 500));
   }
 }
+
 
 const updateRate=async(req,res,next)=>{
   try{
