@@ -5,32 +5,135 @@ import Discount from '../../models/discount/discount.model.js';
 import sendEmail from '../../utilis/sendEmail.js';
 import AppError from '../../utilis/error.utlis.js';
 import Admin from '../../models/admin/admin.model.js'
-
+import moment from 'moment';
 const generateOTP = () => {
   return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a 5-digit OTP
 };
 
+const getLocalDate = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000; // Offset in milliseconds
+  return new Date(now.getTime() - offset); // Convert to local time
+};
+
+const validateTime = (expiryDate, expiryTime) => {
+  // Check if expiryTime is defined
+  if (!expiryTime) {
+    return { valid: false, message: "Expiry time is required." };
+  }
+
+  const timePattern = /^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$/i;
+  const match = expiryTime.match(timePattern);
+
+  if (!match) {
+    return { valid: false, message: "Invalid expiry time format. Use 12-hour format like '2:00 AM'." };
+  }
+
+  let [hours, minutes, period] = match.slice(1);
+  hours = parseInt(hours, 10);
+  minutes = parseInt(minutes, 10);
+
+  if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+    return { valid: false, message: "Invalid expiry time values. Hours must be between 1 and 12, and minutes between 0 and 59." };
+  }
+
+  // Convert 12-hour format to 24-hour format
+  if (period.toUpperCase() === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (period.toUpperCase() === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  // Construct the expiry date and time
+  let expiry = new Date(`${expiryDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+  console.log("Constructed Expiry Date:", expiry);
+
+  if (isNaN(expiry.getTime())) {
+    return { valid: false, message: "Invalid expiry date or time." };
+  }
+
+  // Get the current date and time
+  const now = new Date();
+
+  // Check if expiry is in the future
+  if (expiry <= now) {
+    return { valid: false, message: "The expiry date and time must be in the future." };
+  }
+
+  return { valid: true };
+};
+
+
+
+const generateBookingId = async (bookingDate) => {
+  const d1=new Date()
+
+  console.log(d1);
+  
+  const date = getLocalDate()
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  const dateStr = `${year}${month}${day}`;
+  const prefix = 'UCS';
+
+
+  console.log(date,year,month,day);
+  
+
+  // Find the latest booking ID for the provided booking date
+  const latestBooking = await Booking.findOne({
+    bookingId: { $regex: `^${prefix}${dateStr}` } // Match IDs for the specified date
+  }).sort({ bookingId: -1 }); // Get the latest one
+
+  let seqNum = 1;
+  if (latestBooking) {
+    const lastSeq = parseInt(latestBooking.bookingId.substring(prefix.length + dateStr.length), 10);
+    seqNum = lastSeq + 1;
+  }
+
+  const seqStr = String(seqNum).padStart(3, '0'); // Ensure it’s 3 digits
+
+  return `${prefix}${dateStr}${seqStr}`;
+};
+
+
 const addOneWayBooking = async (req, res, next) => {
   try {
-    const {
-      fromLocation, toLocation, tripType, category, bookingDate, bookingTime, name, email, phoneNumber
+    let {
+      fromLocation, toLocation, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, paymentMode
     } = req.body;
 
-    console.log(req.body);
-    
 
+    const now = new Date();
+    if (!bookingDate) {
+      bookingDate = getLocalDate() // YYYY-MM-DD format
+    }
+    if (!bookingTime) {
+      bookingTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); // 12-hour format (e.g., 2:30 PM)
+    }
+    
     // Validate required fields
-    if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !email) {
-      console.log("ye error");
-      
+
+    if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress || !paymentMode) {
       return next(new AppError("All required fields must be provided", 400));
     }
 
-    // Validate booking date and time
-    const bookingDateTime = new Date(`${bookingDate}T${bookingTime}`);
-    if (isNaN(bookingDateTime.getTime()) || bookingDateTime <= new Date()) {
-      return next(new AppError("Invalid or past booking date and time", 400));
+    const bookingId = await generateBookingId(bookingDate);
+
+    // const { valid, message } = validateTime(bookingDate, bookingTime);
+    // if (!valid) {
+    //   return next(new AppError(message, 400));
+    // }
+
+    // Validate pickup time
+    const pickupTimeValidation = validateTime(pickupDate, pickupTime);
+    if (!pickupTimeValidation.valid) {
+      return next(new AppError(pickupTimeValidation.message, 400));
     }
+
+
 
     // Fetch city rate if it's a One-Way Trip
     let actualPrice = 0;
@@ -46,33 +149,44 @@ const addOneWayBooking = async (req, res, next) => {
       actualPrice = rateObj.rate;
     }
 
-    // Fetch applicable discount
+    // Initialize discount
     let discountValue = 0;
-    const currentDate = new Date();
-    let discountInfo;
 
-    discountInfo = await Discount.findOne({
-      tripType,
-      active: true,
-      $or: [
-        { expiryDate: { $exists: false } }, // No expiry date means always valid
-        { expiryDate: { $gte: currentDate } } // Check if expiry date is not in the past
-      ]
-    });
+    // Handle voucher code if provided
+    let discountInfo
+    if (voucherCode) {
+       discountInfo = await Discount.findOne({
+        voucherCode: voucherCode, // Assuming the discount document has a 'code' field
+        active: true,
+        $or: [
+          { expiryDate: { $exists: false } }, // No expiry date means always valid
+          { expiryDate: { $gte: new Date() } } // Check if expiry date is not in the past
+        ]
+      });
 
-    console.log(discountInfo);
-    
+      if (discountInfo) {
+        const discountExpiryDate = moment(discountInfo.expiryDate).endOf('day');
+        const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
 
-    if (discountInfo && discountInfo.discountApplication === 2) {
-      // Apply discount based on its type
-      if (discountInfo.discountType === 1) {
-        // Percentage discount
-        discountValue = (actualPrice * discountInfo.discountValue) / 100;
-        console.log("discount value is ",discountValue);
-        
-      } else if (discountInfo.discountType === 2) {
-        // Fixed discount
-        discountValue = discountInfo.discountValue;
+        // Check if the current date and time are within the discount's expiry date and time
+        if (discountExpiryDate.isBefore(new Date()) || 
+            (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
+          return next(new AppError("Discount has expired", 400));
+        }
+
+        // Check if actual price meets the discount limit
+        if (actualPrice >= discountInfo.discountLimit) {
+          // Apply discount based on its type
+          if (discountInfo.discountType === 1) {
+            // Percentage discount
+            discountValue = (actualPrice * discountInfo.discountValue) / 100;
+          } else if (discountInfo.discountType === 2) {
+            // Fixed discount
+            discountValue = discountInfo.discountValue;
+          }
+        } else {
+          return next(new AppError("Price does not meet the discount limit", 400));
+        }
       }
     }
 
@@ -81,6 +195,7 @@ const addOneWayBooking = async (req, res, next) => {
 
     // Create the booking
     const booking = new Booking({
+      bookingId,
       fromLocation,
       toLocation,
       tripType,
@@ -88,8 +203,13 @@ const addOneWayBooking = async (req, res, next) => {
       actualPrice,
       discountValue,
       totalPrice,
-      bookingDate: bookingDateTime,
+      bookingDate,
       bookingTime,
+      pickupDate,
+      pickupTime,
+      pickupAddress,
+      dropAddress,
+      paymentMode,
       status: "confirmed" // Set status to confirmed
     });
 
@@ -100,68 +220,34 @@ const addOneWayBooking = async (req, res, next) => {
     let user = await User.findOne({ email });
 
     if (user) {
-      console.log("kya mc user hai");
-      console.log("discout info is",discountInfo);
-      
-      let userDiscount
+      let userDiscount;
       // If user exists, apply discount to the user's discount info
-      if (user.discount && user.discount.tripType === tripType && user.discount.lastDate >= currentDate) {
-        console.log("mc user",user);
-        console.log(user.discount);
-        
-        
-         userDiscount = user.discount;
-         console.log(userDiscount);
-         
-        if(userDiscount){
-          booking.vocherDiscount=userDiscount.rate
+      if (user.discount && user.discount.tripType === tripType && user.discount.lastDate >= new Date()) {
+        userDiscount = user.discount;
+        if (userDiscount) {
+          booking.voucherDiscount = userDiscount.rate;
+          booking.totalPrice = booking.totalPrice - userDiscount.rate;
         }
-         
-        booking.totalPrice=booking.totalPrice-userDiscount.rate
-        // user.discount = {
-        //   tripType:"",
-        //   rate:0,
-        //   lastDate:0
-        // };
-        
         user.discount = {};
-        console.log("mera babu user",user);
-        
-        await user.save()
-
-
-        await User.findById(user._id)
-
-        console.log("after babu ",  user);
-        
-        // await booking.save()
+        await user.save();
       }
-        if (discountInfo && discountInfo.discountApplication === 1) {
-          // Apply discount to user's future trips
-          console.log("tu chal mai aaya");
-          user.tripType=tripType
-          user.discount.rate = discountInfo.discountValue;
-          user.discount.lastDate = new Date(); // Update the last date
-          console.log(user);
-          user.discount = {
-            tripType:tripType,
-            rate: discountInfo.discountValue,
-            lastDate:discountInfo.expiryDate
-          };
-
-          console.log(user.discount);
-          
-          
-          await user.save();
-        }
+      if (discountInfo && discountInfo.discountApplication === 1) {
+        // Apply discount to user's future trips
+        user.tripType = tripType;
+        user.discount = {
+          tripType,
+          rate: discountInfo.discountValue,
+          lastDate: discountInfo.expiryDate
+        };
+        await user.save();
+      }
 
       // Update booking with userId
       booking.userId = user._id;
-    
       await booking.save();
 
-      // Update user's booking history \
-      user.  bookingHistory.push(booking._id)
+      // Update user's booking history
+      user.bookingHistory.push(booking._id);
       await user.save();
 
       // Send booking confirmation email to existing user
@@ -179,6 +265,8 @@ const addOneWayBooking = async (req, res, next) => {
           <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
           <li>Booking Date: ${booking.bookingDate.toLocaleDateString()}</li>
           <li>Booking Time: ${booking.bookingTime}</li>
+          <li>Pickup Address: ${booking.pickupAddress}</li>
+          <li>Drop Address: ${booking.dropAddress}</li>
         </ul>
         <p>Thank you for booking with us!</p>
         <p>Best regards,<br>UCS CAB Support Team</p>
@@ -212,56 +300,32 @@ const addOneWayBooking = async (req, res, next) => {
     } else {
       // Create a new user
       if (!name || !phoneNumber) {
-        return next(new AppError("Name and phone number are required to create a new user", 400));
+        return next(new AppError("Name and phone number are required for new users", 400));
       }
-
-      const otp = generateOTP();
-      const otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes from now
-      
-
 
       user = new User({
         name,
         email,
         phoneNumber,
-        otp,
-        otpExpiresAt,
-        profile: {
-          public_id: "",
-          secure_url: "",
-        },
-        password: name // Assuming password is just the name, adjust as necessary
+        bookingHistory: [booking._id]
       });
 
-      
       if (discountInfo && discountInfo.discountApplication === 1) {
-        user.tripType=tripType
-        user.discount.rate = discountInfo.discountValue;
-        user.discount.lastDate = new Date(); // Update the last date
-        console.log(user);
+        // Apply discount to user's future trips
+        user.tripType = tripType;
         user.discount = {
-          tripType:tripType,
+          tripType,
           rate: discountInfo.discountValue,
-          lastDate:discountInfo.expiryDate
+          lastDate: discountInfo.expiryDate
         };
       }
 
-      // Save the new user
+      // Save new user
       await user.save();
 
       // Update booking with userId
       booking.userId = user._id;
       await booking.save();
-
-      // Send OTP email to new user
-      const otpSubject = '🔒 Verify Your Account';
-      const otpMessage = `
-        <p>Hello ${name},</p>
-        <p>Your verification code is <strong>${otp}</strong>. Please use this code to complete your registration.</p>
-        <p>This code will expire in 2 minutes. If you did not request this, please ignore this email.</p>
-        <p>Best regards,<br>UCS CAB Support Team</p>
-      `;
-      await sendEmail(email, otpSubject, otpMessage);
 
       // Send booking confirmation email to new user
       const bookingSubject = 'Booking Confirmation';
@@ -278,23 +342,44 @@ const addOneWayBooking = async (req, res, next) => {
           <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
           <li>Booking Date: ${booking.bookingDate.toLocaleDateString()}</li>
           <li>Booking Time: ${booking.bookingTime}</li>
+          <li>Pickup Address: ${booking.pickupAddress}</li>
+          <li>Drop Address: ${booking.dropAddress}</li>
         </ul>
         <p>Thank you for booking with us!</p>
         <p>Best regards,<br>UCS CAB Support Team</p>
       `;
-      
       await sendEmail(email, bookingSubject, bookingMessage);
 
-      return res.status(201).json({
+      // Send OTP for email verification
+      const otp = generateOTP();
+      const otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes from now
+
+      user.otp = otp;
+      user.otpExpiresAt = otpExpiresAt;
+      await user.save();
+
+      const otpSubject = '🔒 Verify Your Account';
+      const otpMessage = `
+        <p>Hello ${name},</p>
+        <p>Your verification code is <strong>${otp}</strong>. Please use this code to complete your registration.</p>
+        <p>This code will expire in 2 minutes. If you did not request this, please ignore this email.</p>
+        <p>Best regards,<br>UCS CAB Support Team</p>
+      `;
+      await sendEmail(email, otpSubject, otpMessage);
+
+      return res.status(200).json({
         success: true,
-        message: "User created and booking confirmed. Please verify your account with the OTP sent to your email.",
+        message: "Booking created and confirmation email sent successfully.",
         data: booking
       });
     }
   } catch (error) {
-    return next(new AppError(error.message, 500));
+    console.error(error);
+    return next(new AppError("Something went wrong while creating the booking", 500));
   }
 };
+
+
 
 const verifyOneWayBooking = async (req, res, next) => {
   try {
@@ -686,70 +771,83 @@ const getSingleBooking=async(req,res,next)=>{
 
 
 
-const bookComplete=async(req,res,next)=>{ 
-  try{
-    const {id}=req.params
+const bookComplete = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let { extraRates } = req.body;
 
-    const {extraRates}=req.body
-
-    if(!extraRates){
-      extraRates=0
+    if (!extraRates) {
+      extraRates = 0;
     }
 
-    //  admin authrozation
+    // Admin authorization
+    const validBooking = await Booking.findById(id);
 
-    const validBooking=await Booking.findById(id)
-
-    if(!validBooking){
-      return next(new AppError("Booking is not Valid",404))
+    if (!validBooking) {
+      return next(new AppError("Booking is not Valid", 404));
     }
 
-    if(validBooking.status==="confirmed"){
-         validBooking.status="complete"
-         const extraPrice=extraRates*10
+    // Convert pickupDate and pickupTime to Date object
+    const pickupDate = new Date(validBooking.pickupDate); // ISO format
+    const [pickupHours, pickupMinutesPart] = validBooking.pickupTime.split(':');
+    const [pickupMinutes, ampm] = pickupMinutesPart.split(' ');
 
-         const totalPrice=validBooking.totalPrice+extraPrice
-     
-         validBooking.extraKm=extraRates
-         validBooking.extraPrice=extraPrice
-         validBooking.totalPrice=totalPrice
-     
+    let hours = parseInt(pickupHours, 10);
+    const minutes = parseInt(pickupMinutes, 10);
 
+    // Convert 12-hour format to 24-hour format
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
 
-         await validBooking.save()
-    }else{
-      return next(new AppError("Booking is not Valid",400))
+    // Create a Date object for pickup date and time
+    const pickupDateTime = new Date(pickupDate.setHours(hours, minutes, 0, 0));
+
+    // Get current date and time
+    const currentDateTime = new Date();
+
+    // Check if pickup date and time have passed
+    if (pickupDateTime > currentDateTime) {
+      return next(new AppError("Booking cannot be marked complete before the pickup date and time", 400));
     }
 
+    if (validBooking.status === "confirmed") {
+      validBooking.status = "complete";
+      const extraPrice = extraRates * 10;
+      const totalPrice = validBooking.totalPrice + extraPrice;
 
+      validBooking.extraKm = extraRates;
+      validBooking.extraPrice = extraPrice;
+      validBooking.totalPrice = totalPrice;
+
+      await validBooking.save();
+    } else {
+      return next(new AppError("Booking is not Valid", 400));
+    }
 
     const subject = 'Your Driver Details Have Been Updated';
     const text = `Dear Customer,
-    Your Booking is completed
-
+    Your Booking is completed.
 
 Thank you for using our service.
 
 Best regards,
 The Team`;
 
-const validUser=await User.findById(validBooking.userId)
-
-await sendEmail(validUser.email,subject,text)
-
+    const validUser = await User.findById(validBooking.userId);
+    await sendEmail(validUser.email, subject, text);
 
     res.status(200).json({
-      success:true,
-      message:"Bookig is Complete Succesfully",
-      data:validBooking
-    })
+      success: true,
+      message: "Booking is Complete Successfully",
+      data: validBooking
+    });
 
-  }catch(error){
-    return next(new AppError(error.message,500))
+  } catch (error) {
+    return next(new AppError(error.message, 500));
   }
-
-
 }
+
+
 
 const driverDetail = async (req, res, next) => {
   try {

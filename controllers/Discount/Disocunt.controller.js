@@ -3,66 +3,74 @@ import AppError from "../../utilis/error.utlis.js";
 
 const addDiscount = async (req, res, next) => {
     try {
-        const { tripType, discountType, discountValue, validityDays, expiryDate,discountApplication } = req.body;
+        const { tripType, discountType, discountValue, expiryDate, expiryTime, discountApplication ,discountLimit} = req.body;
 
-        // Log the incoming request data
         console.log(req.body);
 
         // Validate required fields
-        if (!tripType || discountValue === undefined || validityDays === undefined) {
-            console.log(req.body);
-            
-            return next(new AppError("All fields are required", 400));
+        if (!tripType || discountValue === undefined || discountType === undefined || discountApplication === undefined || !expiryDate || !expiryTime) {
+            return next(new AppError("Required fields: tripType, discountValue, discountType, discountApplication, expiryDate, expiryTime", 400));
         }
 
-        // Convert validityDays to integer
-        const days = parseInt(validityDays, 10);
-        if (isNaN(days) || days < 0) {
-            return next(new AppError("Invalid number of validity days", 400));
+        // Convert 12-hour time format to 24-hour time format
+        const timePattern = /^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$/i;
+        const match = expiryTime.match(timePattern);
+
+        if (!match) {
+            return next(new AppError("Invalid expiry time format. Use 12-hour format like '2:00 AM'.", 400));
         }
 
-        // Determine the expiry date
-        let expiry;
-        if (expiryDate) {
-            expiry = new Date(expiryDate);
-        } else {
-            expiry = new Date(); // Default to today's date if expiryDate is not provided
-            if (days) {
-                expiry.setDate(expiry.getDate() + days); // Add days to today if validityDays is provided
-            }
+        let [hours, minutes, period] = match.slice(1);
+        hours = parseInt(hours, 10);
+        minutes = parseInt(minutes, 10);
+
+        if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+            return next(new AppError("Invalid expiry time values. Hours must be between 1 and 12, and minutes between 0 and 59.", 400));
+        }
+
+        // Convert 12-hour format to 24-hour format
+        if (period.toUpperCase() === "PM" && hours !== 12) {
+            hours += 12;
+        } else if (period.toUpperCase() === "AM" && hours === 12) {
+            hours = 0;
+        }
+
+        // Construct the expiry date and time
+        let expiry = new Date(`${expiryDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+        console.log("Constructed Expiry Date:", expiry);
+
+        if (isNaN(expiry.getTime())) {
+            return next(new AppError("Invalid expiry date or time.", 400));
+        }
+
+        // Get the current date and time
+        const now = new Date();
+
+        // Check if expiry is in the future
+        if (expiry <= now) {
+            return next(new AppError("The expiry date and time must be in the future.", 400));
         }
 
         // Check if a discount already exists for the given trip type
         let discount = await Discount.findOne({ tripType });
 
         if (discount) {
-            // Update existing discount
-            discount.discountType = discountType;
-            discount.discountValue = discountValue;
-            discount.expiryDate = expiry;
-            discount.active = true; // Set active to true for updates
-            discount.discountApplication=discountApplication
-            await discount.save();
-
-            return res.status(200).json({
-                success: true,
-                message: "Discount updated successfully",
-                data: discount
+            return res.status(400).json({
+                success: false,
+                message: "Discount already exists for the selected trip type."
             });
         } else {
             // Create a new discount
-            console.log("mc",req.body);
-            
             discount = await Discount.create({
                 tripType,
                 discountType,
                 discountValue,
                 expiryDate: expiry,
-                discountApplication, 
-                active: true // Set active to true by default
+                expiryTime, // Store time as provided in 12-hour format
+                discountApplication,
+                discountLimit,
+                active: true
             });
-
-            await discount.save()
 
             return res.status(201).json({
                 success: true,
@@ -75,8 +83,6 @@ const addDiscount = async (req, res, next) => {
         return next(new AppError(error.message, 500));
     }
 };
-
-
 
 const changeStatus=async(req,res,next)=>{
     try{
@@ -180,16 +186,16 @@ const updateExpiryDate = async (req, res, next) => {
 
 const updateDiscount = async (req, res, next) => {
     try {
-        console.log("boom guys");
-        
+        console.log("Updating discount...");
+
         const { id } = req.params; // Get the discount ID from the route parameters
-        const { discountType, discountValue, expiryDate, discountApplication, validityDays } = req.body;
+        const { discountType, discountValue, expiryDate, expiryTime, discountApplication,discountLimit } = req.body;
 
         // Log the incoming request data
         console.log(req.body);
 
-        // Validate required fields
-        if (!discountType && discountValue === undefined && !expiryDate && !discountApplication && validityDays === undefined) {
+        // Validate that at least one field is provided for update
+        if (discountType === undefined && discountValue === undefined && discountApplication === undefined && !expiryDate && !expiryTime) {
             return next(new AppError("At least one field is required for update", 400));
         }
 
@@ -200,16 +206,52 @@ const updateDiscount = async (req, res, next) => {
             return next(new AppError("Discount not found", 404));
         }
 
-        let expiry = discount.expiryDate; // Use the existing expiryDate if validityDays is not provided
+        // Handle expiry date and time
+        let expiry = discount.expiryDate; // Use the existing expiryDate if expiryDate and expiryTime are not provided
 
-        if (validityDays !== undefined) {
-            const days = parseInt(validityDays, 10);
-            if (isNaN(days) || days < 0) {
-                return next(new AppError("Invalid number of validity days", 400));
+        if (expiryTime || expiryDate) {
+            // Convert 12-hour time format to 24-hour time format if expiryTime is provided
+            if (expiryTime) {
+                const timePattern = /^(0?[1-9]|1[0-2]):([0-5][0-9])\s*(AM|PM)$/i;
+                const match = expiryTime.match(timePattern);
+
+                if (!match) {
+                    return next(new AppError("Invalid expiry time format. Use 12-hour format like '2:00 AM'.", 400));
+                }
+
+                let [hours, minutes, period] = match.slice(1);
+                hours = parseInt(hours, 10);
+                minutes = parseInt(minutes, 10);
+
+                if (hours < 1 || hours > 12 || minutes < 0 || minutes > 59) {
+                    return next(new AppError("Invalid expiry time values. Hours must be between 1 and 12, and minutes between 0 and 59.", 400));
+                }
+
+                // Convert 12-hour format to 24-hour format
+                if (period.toUpperCase() === "PM" && hours !== 12) {
+                    hours += 12;
+                } else if (period.toUpperCase() === "AM" && hours === 12) {
+                    hours = 0;
+                }
+
+                // Construct the expiry date and time
+                expiry = new Date(`${expiryDate || discount.expiryDate.toISOString().split('T')[0]}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
+                console.log("Constructed Expiry Date:", expiry);
+
+                if (isNaN(expiry.getTime())) {
+                    return next(new AppError("Invalid expiry date or time.", 400));
+                }
+            } else if (expiryDate) {
+                expiry = new Date(expiryDate);
             }
 
-            expiry = new Date(); // Default to today's date if expiryDate is not provided
-            expiry.setDate(expiry.getDate() + days); // Add days to today if validityDays is provided
+            // Get the current date and time
+            const now = new Date();
+
+            // Check if expiry is in the future
+            if (expiry <= now) {
+                return next(new AppError("The expiry date and time must be in the future.", 400));
+            }
         }
 
         // Update the fields if they are provided
@@ -219,15 +261,16 @@ const updateDiscount = async (req, res, next) => {
         if (discountValue !== undefined) {
             discount.discountValue = discountValue;
         }
-        if (expiryDate) {
-            discount.expiryDate = new Date(expiryDate);
-        } else if (validityDays !== undefined) {
-            discount.expiryDate = expiry; // Update expiryDate only if validityDays is provided
-        }
         if (discountApplication !== undefined) {
             discount.discountApplication = discountApplication;
         }
-        
+        if (expiryDate || expiryTime) {
+            discount.expiryDate = expiry; // Update expiryDate only if expiryDate or expiryTime is provided
+        }
+        if(discountLimit!==undefined){
+            discount.discountLimit=discountLimit
+        }
+
         discount.active = true;
 
         // Save the updated discount
@@ -244,6 +287,56 @@ const updateDiscount = async (req, res, next) => {
     }
 };
 
+const fetchDiscount=async(req,res,next)=>{
+    try{
+
+        const {voucherCode}=req.body
+
+        const discount=await Discount.find({voucherCode})
+
+        if(!discount || discount.length===0){
+            return next(new AppError("Discount not Found",400))
+        }
+
+        res.status(200).json({
+            success:true,
+            message:"Discount are:-",
+            data:discount
+        })
+
+
+    }catch(error){
+        return next(new AppError(error.message,500))
+    }
+}
+
+
+const deleteDiscount=async(req,res,next)=>{
+    try{
+
+        const {id}=req.params
+        console.log("kya mai aaya");
+        
+
+        const discount=await Discount.findById(id)
+
+        if(!discount){
+            return next(new AppError("Discount not Found",400))
+        }
+
+        await Discount.findByIdAndDelete(id)
+
+        res.status(200).json({
+            success:true,
+            message:"Discount Delete Succesfully"
+        })
+
+    }catch(error){
+        return next(new AppError(error.message,500))
+    }
+}
+
+
 
 export {
     addDiscount,
@@ -251,5 +344,7 @@ export {
     getDiscount,
     discount,
     updateExpiryDate,
-    updateDiscount
+    updateDiscount,
+    fetchDiscount,
+    deleteDiscount
 }
