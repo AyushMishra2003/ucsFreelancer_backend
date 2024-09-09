@@ -337,6 +337,9 @@ const userLogin=async(req,res,next)=>{
             return next(new AppError("Users is Not Found",404))
         }
 
+        console.log(validUser);
+        
+
         // if(!validUser.isVerify){
         //     return next(new AppError("Account is Not Verified",401))
         // }
@@ -468,6 +471,24 @@ const resendOtp=async(req,res,next)=>{
   }
 }
 
+
+const userLogout = async (req, res, next) => {
+  try {
+    res.cookie("token", null, {
+      secure: true,
+      maxAge: 0,
+      httpOnly: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
 // const verifyAccount=async(req,res,next)=>{
 //     try{
 
@@ -500,5 +521,6 @@ export {
     verifyforget_password,
     userLogin,
     changeStatus,
-    resendOtp
+    resendOtp,
+    userLogout
 }

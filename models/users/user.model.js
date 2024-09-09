@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Booking from '../Booking/Booking.model.js';
+import jwt from 'jsonwebtoken'; // Import the jsonwebtoken package
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -55,6 +56,22 @@ const userSchema = new mongoose.Schema({
     },
   },
 });
+
+
+userSchema.methods = {
+  generateJWTToken: async function () {
+    return await jwt.sign(
+      { id: this._id, userName: this.userName },
+      process.env.SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+  },
+  comparePassword: async function (plaintextPassword) {
+    return await bcrypt.compare(plaintextPassword, this.password);
+  },
+};
 
 
 const User = mongoose.model('Ucs_User', userSchema);
