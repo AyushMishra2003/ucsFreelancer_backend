@@ -30,7 +30,7 @@ const addUser = async (req, res, next) => {
     // Continue with user creation
     const otp = generateOTP();
     let existingUser = await User.findOne({ email });
-
+    let user
     if (existingUser) {
       if (!existingUser.isVerify) {
         existingUser.otp = otp;
@@ -42,7 +42,7 @@ const addUser = async (req, res, next) => {
     } else {
       const otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes from now
 
-      const user = new User({
+       user = new User({
         name,
         email,
         password,
@@ -95,6 +95,7 @@ const addUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "OTP sent to your email address. Please verify your account.",
+      user
     });
   } catch (error) {
     return next(new AppError(error.message, 500));
@@ -140,7 +141,7 @@ const verifyOTP = async (req, res, next) => {
       res.status(200).json({
         success: true,
         message: "Account verified successfully",
-        data:user
+        user
       });
     } catch (error) {
       return next(new AppError(error.message, 500));
@@ -312,7 +313,7 @@ const verifyforget_password=async(req,res,next)=>{
           res.status(200).json({
             success: true,
             message: "Password Changed successfully",
-            data:user
+            user
           });
 
     }catch(error){
@@ -336,17 +337,17 @@ const userLogin=async(req,res,next)=>{
             return next(new AppError("Users is Not Found",404))
         }
 
-        if(!validUser.isVerify){
-            return next(new AppError("Account is Not Verified",401))
-        }
+        // if(!validUser.isVerify){
+        //     return next(new AppError("Account is Not Verified",401))
+        // }
 
         if(validUser.password!==password){
-            return next(new AppError("Passoword is Wrong",401))
+            return next(new AppError("Password is Wrong",401))
         }
         
-        if(!validUser.status){
-            return next(new AppError("Not Autherication to Login",402))
-        }
+        // if(!validUser.status){
+        //     return next(new AppError("Not Autherication to Login",402))
+        // }
 
         const token = await validUser.generateJWTToken()
         res.cookie('token', token, cookieOption)
@@ -358,7 +359,7 @@ const userLogin=async(req,res,next)=>{
         res.status(200).json({
             success:true,
             message:"Login Succesfully!",
-            data:validUser
+            validUser
         })
 
 
@@ -394,6 +395,79 @@ const changeStatus=async(req,res,next)=>{
     }
 }
 
+const resendOtp=async(req,res,next)=>{
+  try{
+     
+    const {email}=req.body
+
+    if(!email){
+      return next(new AppError("Email is Required"))
+    }
+
+    const validUser=await User.findOne({email})
+
+    if(!validUser){
+      return next(new AppError("User is Not Valid",400))
+    }
+
+    if(validUser.isVerify){
+      return next(new AppError("User is already verified",402))
+    }
+
+
+    const otp = generateOTP();
+    let existingUser = await User.findOne({ email });
+    let user
+    if (existingUser) {
+      if (!existingUser.isVerify) {
+        existingUser.otp = otp;
+        existingUser.otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes from now
+        await existingUser.save();
+      } else {
+        return next(new AppError("Account is already verified", 402));
+      }
+    } else {
+      const otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes from now
+    }
+
+    const subject = '🔒 Resent Otp';
+    const message = `
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="width: 100%; max-width: 24rem; background-color: #f4f4f4; border-radius: 8px; padding: 20px; box-sizing: border-box;">
+        <tr>
+          <td style="text-align: center; padding: 20px 0;">
+            <img src="https://img.icons8.com/ios-filled/50/0074f9/lock.png" alt="Lock Icon" style="width: 40px; margin-bottom: 15px;">
+            <p style="font-size: 1.2rem; font-weight: bold; margin: 0;">Hello, ${"Ayush Msihra"}</p>
+            <p style="font-weight: 400; text-align: center; margin: 20px 0;">
+              Your verification code is <strong>${otp}</strong>. Please use this code to complete your registration.
+            </p>
+            <p style="font-weight: 400; text-align: center; margin: 20px 0;">
+              This code will expire in 2 minutes. If you did not request this, please ignore this email.
+            </p>
+            <p style="font-weight: 400; text-align: center; margin: 20px 0;">
+              Aao Chalein,<br>
+              UCS CAB  Support Team
+            </p>
+          </td>
+        </tr>
+      </table>`;
+
+    await sendEmail(email, subject, message);
+
+
+
+    res.status(200).json({
+      success:true,
+      message:"RESNET OTP SENT Succesfully",
+      existingUser
+    })
+
+
+   
+  }catch(error){
+    return next(new AppError(error.messagem,500))
+  }
+}
+
 // const verifyAccount=async(req,res,next)=>{
 //     try{
 
@@ -425,5 +499,6 @@ export {
     forget_passoword,
     verifyforget_password,
     userLogin,
-    changeStatus
+    changeStatus,
+    resendOtp
 }
