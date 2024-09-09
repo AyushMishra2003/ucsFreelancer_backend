@@ -69,37 +69,40 @@ const getRate=async(req,res,next)=>{
     }
 }
 
-const getByLocation=async(req,res,next)=>{
-    try{
+const getByLocation = async (req, res, next) => {
+  try {
+      const { fromCity, toCity } = req.body;
 
-        const {fromCity,toCity}=req.body
+      if (!fromCity || !toCity) {
+          return next(new AppError("Cities Are Required", 400));
+      }
 
-        if(!fromCity || !toCity){
-            return next(new AppError("Cities Are Required"))
-        }
+      // Fetch rates based on fromCity and toCity
+      const cityRate = await CityRate.findOne({ fromCity, toCity });
 
-       const cityRate=await CityRate.find({fromCity,toCity})
+      if (!cityRate) {
+          return next(new AppError("Cities Rates Not Found", 404));
+      }
 
-      //  const rate = await getByLocationCategory(fromCity, toCity, 'Ertiga');
+      // Format response data
+      const formattedRates = cityRate.rates.map(rate => ({
+          category: rate.category,
+          rate: rate.rate
+      }));
 
-       console.log(rate);
-       
+      console.log(formattedRates);
+      
 
-       if(!cityRate){
-        return next(new AppError("Cities Rates Not Found"))
-       }
+      res.status(200).json({
+          success: true,
+          message: "Distance Rate Are:-",
+          data: formattedRates
+      });
 
-       res.status(200).json({
-        success:true,
-        message:"Distance Rate Are:-",
-        data:cityRate
-       })
-
-
-    }catch(error){
-        return next(new AppError(error.message,500))
-    }
-}
+  } catch (error) {
+      return next(new AppError(error.message, 500));
+  }
+};
 
 
 const updateRate = async (req, res, next) => {

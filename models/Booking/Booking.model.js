@@ -9,18 +9,25 @@ const BookingSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Ucs_User',
   },
+  cityName:{
+    type:String
+ },
   tripType: {
     type: String,
-    enum: ["Airport Trip", "Round Trip", "One-Way Trip", "Local Trip"],
+    enum: ["Airport Trip", "Round Trip", "One-Way Trip", "Local"],
     required: true,
   },
   fromLocation: {
     type: String,
-    required: true,
+    // required: true,
   },
   toLocation: {
     type: String,
-    required: true,
+    // required: true,
+  },
+  airpotAddress: {
+    type: String,
+    // required: true,
   },
   pickupAddress: {
     type: String,
@@ -42,6 +49,10 @@ const BookingSchema = new Schema({
     type: Number,
     default: 0, // Amount or percentage of discount applied
   },
+  airpotValue:{
+    type:Number,
+    enum:[1,2]
+  },
   totalPrice: {
     type: Number,
     required: true,
@@ -49,9 +60,10 @@ const BookingSchema = new Schema({
   voucherDiscount: {
     type: Number,
   },
+
   status: {
     type: String,
-    enum: ["pending", "confirmed", "cancelled", "complete"],
+    enum: ["pending","ongoing", "confirmed", "cancelled", "complete"],
     default: "pending",
   },
   extraKm: {

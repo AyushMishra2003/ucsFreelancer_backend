@@ -10,6 +10,10 @@ import adminRoute from "./routes/admin/admin.route.js";
 import cityRate from "./routes/Booking/CarRate.js";
 import oneWayBookingRoute from "./routes/Booking/OneWayBooking.route.js";
 import discountRoute from "./routes/discount/discount.route.js";
+import localCategoryRoute from "./routes/local/local.route.js";
+import chart from "./routes/chartrate.js";
+
+import airpotRoute from "./routes/airpot/airpot.route.js";
 // import errorMiddleware from "./middlewares/error.middleware.js";
 // import userRoutes from './routes/user.routes.js'
 // import carsRoutes from './routes/cars.routes.js'
@@ -51,6 +55,15 @@ app.use("/api/v1/admin",adminRoute)
 app.use("/api/v1/city/rate",cityRate)
 app.use("/api/v1/oneway/booking",oneWayBookingRoute)
 app.use("/api/v1/discount",discountRoute)
+
+
+// localRoute
+
+app.use("/api/v1/local",localCategoryRoute)
+
+app.use("/api/v1/airpot",airpotRoute)
+
+app.use("/api/v1/chart",chart)
 
 // app.use('/api/v1/user', userRoutes)
 
