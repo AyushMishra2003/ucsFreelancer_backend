@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { addLocalCategory, deletLocalCategory, editLocalCategory, getByLocationCategory } from "../../controllers/Local/LocalCategory.js";
-import { addCity, addRate, deleteRate, deleteSpecificCategory, getByLocation, getRate, laad, updateLocalRate, updateRate} from "../../controllers/Local/LocalRateChart.js";
+import { addCity, addRate, deleteRate, deleteSpecificCategory, getAllCityNames, getByLocation, getRate, laad, updateLocalRate, updateRate} from "../../controllers/Local/LocalRateChart.js";
 
 
 
@@ -11,6 +11,7 @@ const localCategoryRoute=Router()
 
 localCategoryRoute.post("/",addLocalCategory)
 localCategoryRoute.get("/",getByLocationCategory)
+localCategoryRoute.get("/city",getAllCityNames)
 localCategoryRoute.put("/:id",editLocalCategory)
 localCategoryRoute.delete("/:id",deletLocalCategory)
 

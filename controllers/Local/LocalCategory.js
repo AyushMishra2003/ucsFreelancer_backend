@@ -115,6 +115,8 @@ const deletLocalCategory=async(req,res,next)=>{
     }
 }
 
+
+
 export {
     addLocalCategory,
     getByLocationCategory,

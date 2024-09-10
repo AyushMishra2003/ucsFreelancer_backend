@@ -346,6 +346,29 @@ const addCity=async(req,res,next)=>{
     }
 }
 
+const getAllCityNames = async (req,res,next) => {
+    try {
+      // Fetch only the cityName field from all documents
+      const cities = await LocalCityRate.find({}, { cityName: 1, _id: 0 });
+
+
+      if(!cities){
+        return next(new AppError("City Not Found",400))
+      }
+     
+      res.status(200).json({
+        success:true,
+        message:"All City Name",
+        data:cities
+      })
+
+
+    } catch (error) {
+      console.error('Error fetching city names:', error);
+       return(next(new AppError(error.message,500)))
+    }
+  };
+
 export {
     addRate,
     getRate,
@@ -356,5 +379,6 @@ export {
     getByLocationCategory,
     updateRate,
     laad,
-    addCity
+    addCity,
+    getAllCityNames
 };

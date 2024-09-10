@@ -729,6 +729,8 @@ const addAirpotBooking = async (req, res, next) => {
 
 
     console.log("req.body",req.body);
+    console.log(voucherCode);
+    
 
    let totalDistance= getDistanceBetweenAirports(fromLocation,  airpotAddress);
 
@@ -879,7 +881,8 @@ const addAirpotBooking = async (req, res, next) => {
     // Create the booking
     const booking = new Booking({
       bookingId,
-      fromLocation:
+      fromLocation,
+      airpotAddress,
       dropAddress,
       tripType,
       category,
