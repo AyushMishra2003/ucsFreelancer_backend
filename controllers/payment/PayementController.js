@@ -21,15 +21,14 @@ import Payment from "../../models/Payement/payment.model.js"
  const checkout = async (req, res, next) => {
     try {
 
-        const { amount, id, forName } = req.body
+        const { amount,  forName } = req.body
         console.log(amount)
         const razorAmount = await Number(amount) * 100
         const options = {
             amount: razorAmount,
             currency: "INR",
             notes: {
-                purpose: forName,
-                pay_id: id
+                purpose: forName
             }
         }
 
