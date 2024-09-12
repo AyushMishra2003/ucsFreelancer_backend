@@ -48,13 +48,6 @@ import Payment from "../../models/Payement/payment.model.js"
 
  const paymentVerification = async (req, res, next) => {
     try {
-        // Extracting necessary data from the request
-        const { id } = req.user
-        console.log(id)
-
-        // const cart = await Cart.findOne({
-        //     user: id,
-        // });
 
         const { razorpay_payment_id, razorpay_signature, razorpay_order_id } = await req.body
 
