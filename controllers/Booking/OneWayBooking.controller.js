@@ -400,7 +400,7 @@ const addLocalTripBooking = async (req, res, next) => {
       cityName, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode
     } = req.body;
 
-    console.log("req.body", req.body);
+    // console.log("req.body", req.body);
 
     const now = new Date();
     if (!bookingDate) {
@@ -411,7 +411,7 @@ const addLocalTripBooking = async (req, res, next) => {
     }
 
     // Validate required fields
-    console.log(cityName, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, email, pickupAddress, dropAddress, distance, duration, paymentMode);
+    // console.log(cityName, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, email, pickupAddress, dropAddress, distance, duration, paymentMode);
 
     if (!cityName || !tripType || !category || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress || !paymentMode) {
       console.log("Missing required fields");
@@ -428,14 +428,14 @@ const addLocalTripBooking = async (req, res, next) => {
 
     // Fetch city rate if it's a Local Trip
     let actualPrice = 0;
-    if (tripType === 'Local Trip') {
+    if (tripType === 'Local') {
       const localCityRate = await LocalCityRate.findOne({ cityName });
       if (!localCityRate) {
         return next(new AppError("Rate information not found for the specified city", 400));
       }
 
 
-      console.log(localCityRate);
+      // console.log(localCityRate);
       
 
       const categoryDoc = await LocalCategoryModel.findOne({ name: category });
@@ -467,9 +467,13 @@ const addLocalTripBooking = async (req, res, next) => {
 
       // Determine rate based on distance and duration
       if (distance === 80) {
+        console.log(("kya re pagal"));
+        console.log(rateIndex);
+        
+        
         actualPrice = rateIndex.rateFor80Km8Hours;
-      } else if (distance === 100) {
-        actualPrice = rateIndex.rateFor100Km8Hours;
+      } else if (distance === 120) {
+        actualPrice = rateIndex.rateFor120Km12Hours;
       } else {
         // Handle rates for distances beyond 100 km if needed
         return next(new AppError("Distance exceeds available rate limits", 400));
@@ -499,8 +503,8 @@ const addLocalTripBooking = async (req, res, next) => {
         ]
       });
 
-      console.log("dixout info",discountInfo);
-      console.log("mera log ",discountInfo , discountInfo.tripType);
+      // console.log("dixout info",discountInfo);
+      // console.log("mera log ",discountInfo , discountInfo.tripType);
       
 
       if (discountInfo && discountInfo.tripType===tripType) {
@@ -548,7 +552,7 @@ const addLocalTripBooking = async (req, res, next) => {
     });
 
 
-    console.log(booking);
+    // console.log(booking);
     
 
     // Save booking first
@@ -1065,7 +1069,6 @@ const addAirpotBooking = async (req, res, next) => {
     return next(new AppError("Something went wrong while creating the booking", 500));
   }
 };
-
 
 
 

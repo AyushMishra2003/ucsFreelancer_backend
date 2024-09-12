@@ -15,6 +15,7 @@ import chart from "./routes/chartrate.js";
 
 import airpotRoute from "./routes/airpot/airpot.route.js";
 import termRoute from "./routes/term.routes.js";
+import PayementRouter from "./routes/payment/payment.route.js";
 // import errorMiddleware from "./middlewares/error.middleware.js";
 // import userRoutes from './routes/user.routes.js'
 // import carsRoutes from './routes/cars.routes.js'
@@ -66,6 +67,9 @@ app.use("/api/v1/airpot",airpotRoute)
 
 app.use("/api/v1/chart",chart)
 app.use("/api/v1/tc",termRoute)
+
+
+app.use("/api/v1/payement",PayementRouter)
 
 // app.use('/api/v1/user', userRoutes)
 

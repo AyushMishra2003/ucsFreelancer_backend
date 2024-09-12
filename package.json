@@ -7,6 +7,8 @@
     "cloudinary": "^2.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "crypto-js": "^4.2.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -21,7 +23,8 @@
     "nodemon": "^3.1.4",
     "otp-generator": "^4.0.1",
     "passport": "^0.7.0",
-    "passport-facebook": "^3.0.0"
+    "passport-facebook": "^3.0.0",
+    "razorpay": "^2.9.4"
   },
   "name": "ucs-backend",
   "version": "1.0.0",
