@@ -5,10 +5,10 @@ import mongoose from "mongoose";
 
 const addRate = async (req, res, next) => {
     try {
-        const { cityName, category, perKm, perHour, rateFor80Km8Hours, rateFor100Km8Hours } = req.body;
+        const { cityName, category, perKm, perHour, rateFor80Km8Hours, rateFor120Km12Hours } = req.body;
 
         // Validate input
-        if (!cityName || !category || !perKm || !perHour || !rateFor80Km8Hours || !rateFor100Km8Hours) {
+        if (!cityName || !category || !perKm || !perHour || !rateFor80Km8Hours || !rateFor120Km12Hours) {
             return next(new AppError("All fields are required", 400));
         }
 
@@ -35,12 +35,12 @@ const addRate = async (req, res, next) => {
             }
 
             // Add the new category and rate to the existing document
-            cityRate.rates.push({ category: categoryId, perKm, perHour, rateFor80Km8Hours, rateFor100Km8Hours });
+            cityRate.rates.push({ category: categoryId, perKm, perHour, rateFor80Km8Hours, rateFor120Km12Hours });
         } else {
             // Create a new document for the city
             cityRate = await LocalCityRate.create({
                 cityName,
-                rates: [{ category: categoryId, perKm, perHour, rateFor80Km8Hours, rateFor100Km8Hours }],
+                rates: [{ category: categoryId, perKm, perHour, rateFor80Km8Hours, rateFor120Km12Hours }],
             });
         }
 
@@ -86,30 +86,28 @@ const getByLocation = async (req, res, next) => {
         if (!cityName) {
             return next(new AppError("City is Required", 400));
         }
+
+        // Fetch the city rate with the fully populated category details
         const cityRate = await LocalCityRate.findOne({ cityName })
             .populate({
-                path: 'rates.category', // Populate category field within rates
-                select: 'name' // Include fields from the category, adjust as needed
+                path: 'rates.category', // Populate the category field within rates
+                model: 'UCS_Local_Category' // Make sure this matches your category model
             });
 
         if (!cityRate) {
             return next(new AppError("City Rate Not Found", 404));
         }
 
-        // Format the response data
+        // Format the response data to include the full category object
         const formattedRates = cityRate.rates.map(rate => ({
-            category: rate.category ? rate.category.name : 'Unknown Category', // Adjust if `name` is not the field
+            category: rate.category ? rate.category : 'Unknown Category', // Pass the entire category object
             rate: {
                 perKm: rate.perKm,
                 perHour: rate.perHour,
                 rateFor80Km8Hours: rate.rateFor80Km8Hours,
-                rateFor100Km8Hours: rate.rateFor100Km8Hours
+                rateFor120Km12Hours: rate.rateFor120Km12Hours
             }
         }));
-
-        console.log(formattedRates);
-        
-        
 
         res.status(200).json({
             success: true,
@@ -231,8 +229,6 @@ const deleteRate = async (req, res, next) => {
     }
 };
 
-
-
 const deleteSpecificCategory = async (req, res, next) => {
     try {
         const { cityName } = req.body;
@@ -304,7 +300,6 @@ const updateRate=async(req,res,next)=>{
         return next(new AppError(error.message,500))
     }
 }
-
 
 const laad=async(req,res,next)=>{
     try{

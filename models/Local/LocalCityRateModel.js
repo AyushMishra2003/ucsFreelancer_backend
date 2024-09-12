@@ -26,7 +26,7 @@ const localCityRateSchema = new Schema(
           type: Number,
           // required: true,
         },
-        rateFor100Km8Hours: {
+        rateFor120Km12Hours: {
           type: Number,
           // required: true,
         },

@@ -116,6 +116,28 @@ const deletLocalCategory=async(req,res,next)=>{
 }
 
 
+async function updateExistingCategories() {
+    try {
+      // Find categories missing the new fields and update them
+      const categories = await LocalCategoryModel.find({});
+  
+      categories.forEach(async (category) => {
+        if (!category.numberOfSeats) category.numberOfSeats = 0; // Default value
+        if (category.acAvailable === undefined) category.acAvailable = false; // Default value
+        if (!category.numberOfBags) category.numberOfBags = 0; // Default value
+  
+        // Save updated category
+        await category.save();
+      });
+  
+      console.log('Existing categories updated');
+    } catch (err) {
+      console.error('Error updating existing categories:', err);
+    }
+  }
+  
+
+
 
 export {
     addLocalCategory,
