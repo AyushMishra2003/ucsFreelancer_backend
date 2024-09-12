@@ -69,7 +69,7 @@ app.use("/api/v1/chart",chart)
 app.use("/api/v1/tc",termRoute)
 
 
-app.use("/api/v1/payement",PayementRouter)
+app.use("/api/v1/payment",PayementRouter)
 
 // app.use('/api/v1/user', userRoutes)
 
