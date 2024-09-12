@@ -1,36 +1,27 @@
-import multer from 'multer'
-import path from 'path'
+import multer from 'multer';
+import path from 'path';
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // Directory to store uploaded files
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname); // Create unique filename
+  }
+});
 
-/* The code is creating a multer middleware instance called `upload`. Multer is a middleware for
-handling multipart/form-data, which is commonly used for file uploads. */
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (ext !== '.jpg' && ext !== '.jpeg' && ext !== '.png' && ext !== '.pdf') {
+    return cb(new Error('Unsupported file type!'), false);
+  }
+  cb(null, true);
+};
+
 const upload = multer({
-    dest: 'uploads/',
-    limits: { fileSize: 50 * 1024 * 1024 },
-    storage: multer.diskStorage({
-        destination: 'uploads/',
-        filename: (_req, file, cb) => {
-            cb(null, file.originalname)
-        }
-    }),
-    fileFilter: (_req, file, cb) => {
-        let ext = path.extname(file.originalname)
+  storage: storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB size limit
+  fileFilter: fileFilter
+});
 
-        if (
-            ext !== ".jpg" &&
-            ext !== ".jpeg" &&
-            ext !== ".webp" &&
-            ext !== ".mp4" &&
-            ext !== ".png" &&
-            ext !== ".pdf"
-        ) {
-            cb(new Error(`Unsupported file type! ${ext}`), false)
-            return
-        }
-        cb(null, true)
-    }
-})
-
-
-
-export default upload
+export default upload;
