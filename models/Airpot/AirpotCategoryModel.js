@@ -33,7 +33,7 @@ const airpotCategorySchema = new Schema(
       {
         kilometer:{
           type:String,
-          enum:["30,40,55,70"]
+          enum:["30","40","55","70"]
         },
         rate:{
           type:Number
