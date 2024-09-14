@@ -5,7 +5,8 @@ const roundCitySchema=new Schema(
     {
          roundCityName:{
             type:String,
-            required:true
+            required:true,
+            unique:true
          }
     },
     {
