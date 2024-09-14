@@ -7,7 +7,10 @@ import upload from "../../middleware/multer.middlware.js";
 const roundRouter=Router()
 
 
-roundRouter.post("/",upload.single('photo'),addRoundCategory)
+roundRouter.post("/",upload.single("photo"),addRoundCategory)
+
+
+
 roundRouter.get("/",getRoundCategory)
 roundRouter.put("/:id",upload.single('photo'),updateRoundCategory)
 roundRouter.delete("/:id",deleteRoundCategory)

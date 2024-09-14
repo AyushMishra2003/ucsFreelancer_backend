@@ -6,10 +6,9 @@ import fs from 'fs';
 
 const addRoundCategory = async (req, res, next) => {
     try {
-        // Extract data from the request body
         console.log("jai hp");
-        
-        const { name, numberOfSeats, acAvailable, numberOfBags,perKm,extraKm } = req.body;
+
+        const { name, numberOfSeats, acAvailable, numberOfBags, perKm, extraKm } = req.body;
         console.log(req.body); // Debugging purpose
 
         // Validate the data
@@ -17,43 +16,60 @@ const addRoundCategory = async (req, res, next) => {
             return next(new AppError("All fields are required", 400));
         }
 
-        // Convert acAvailable to boolean if needed
+        // Convert acAvailable to boolean
         const isAcAvailable = acAvailable === 'true'; // Adjust if 'true'/'false' strings are used
-
-        // Convert numberOfSeats and numberOfBags to numbers if needed
         const seats = Number(numberOfSeats);
         const bags = Number(numberOfBags);
 
-        // Create a new round category
+        // Create a new round category with an empty photo object initially
         const roundCategory = await roundCategoryModel.create({
             name,
             numberOfBags: bags,
             numberOfSeats: seats,
             acAvailable: isAcAvailable,
             perKm,
-            extraKm
+            extraKm,
+            photo:{
+                public_id:"",
+                secure_url:""
+            }
         });
+
+        console.log(req.file);
+        
 
         if (!roundCategory) {
             return next(new AppError("Round Category Not Created", 402));
         }
 
-        // Handle file upload
+        // Handle file upload if the file is present
         if (req.file) {
-            console.log('File Upload:', req.file);
+            console.log("File Upload Process Started");
+            console.log('File Details:', req.file); // Debugging log to ensure file info is correct
+
             const result = await cloudinary.v2.uploader.upload(req.file.path, {
                 folder: "lms",
             });
+
             if (result) {
+                // Log the Cloudinary result for debugging
+                console.log('Cloudinary Upload Result:', result);
+
+                // Update the round category with Cloudinary photo info
                 roundCategory.photo = {
                     public_id: result.public_id,
                     secure_url: result.secure_url
                 };
-                await roundCategory.save(); // Save the round category with updated photo info
-            }
 
-            // Remove the file using fs.unlinkSync
-            fs.unlinkSync(req.file.path); // Ensure correct file removal
+                // Save the updated round category with the photo details
+                await roundCategory.save();
+
+                // Remove the uploaded file from the server
+                fs.unlinkSync(req.file.path); // Ensure correct file removal
+            } else {
+                console.error("Cloudinary upload failed.");
+                return next(new AppError("Failed to upload photo", 500));
+            }
         }
 
         res.status(200).json({
@@ -63,6 +79,7 @@ const addRoundCategory = async (req, res, next) => {
         });
 
     } catch (error) {
+        console.error("Error in addRoundCategory:", error); // Additional logging for debugging
         return next(new AppError(error.message, 500));
     }
 };

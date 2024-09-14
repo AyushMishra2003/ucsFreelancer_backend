@@ -820,7 +820,7 @@ const addAirpotBooking = async (req, res, next) => {
     const bookingId = await generateBookingId(bookingDate);
 
     // const { valid, message } = validateTime(bookingDate, bookingTime);
-    // if (!valid) {
+    // if (!valid) {.
     //   return next(new AppError(message, 400));
     // }
 
