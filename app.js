@@ -17,6 +17,8 @@ import PayementRouter from "./routes/payment/payment.route.js";
 import { addRoundCategory } from "./controllers/Round/RoundCategory.js";
 import multer from 'multer';
 import roundRouter from "./routes/round/round.route.js";
+import { getDistanceBetweenAirports } from "./controllers/Booking/OneWayBooking.controller.js";
+import distanceRoute from "./routes/distanceRoute.js";
 
 // Load environment variables
 config();
@@ -52,6 +54,9 @@ app.use("/api/v1/payment", PayementRouter);
 
 // Route for adding round category with file upload
 app.use("/api/v1/round",roundRouter);
+
+
+app.use("/api/v1/distance",distanceRoute)
 
 // Default route
 app.get("/", (req, res) => {

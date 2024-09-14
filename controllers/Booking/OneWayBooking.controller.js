@@ -672,18 +672,17 @@ const addLocalTripBooking = async (req, res, next) => {
 // Function to get coordinates of a location
 const getCoordinates = async (location) => {
   try {
-    const response = await axios.get(`https://us1.locationiq.com/v1/search.php`, {
+    const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
       params: {
-        key: 'pk.2bc21e092c881e1b4035ef20f9da09f6',
-        q: location,
-        format: 'json',
-        countrycodes: 'IN' // Restrict results to India
+        address: location,
+        key: 'AIzaSyC9ZOZHwHmyTWXqACqpZY2TL7wX2_Zn05U', // Replace with your Google API key
+        region: 'IN' // Restrict results to India
       }
     });
 
-    if (response.data && response.data.length > 0) {
-      const { lat, lon } = response.data[0];
-      return { lat: parseFloat(lat), lon: parseFloat(lon) };
+    if (response.data && response.data.results.length > 0) {
+      const { lat, lng } = response.data.results[0].geometry.location;
+      return { lat, lon: lng };
     } else {
       throw new Error('Location not found in India');
     }
@@ -693,17 +692,32 @@ const getCoordinates = async (location) => {
   }
 };
 
-// Function to calculate distance between two points using latitude and longitude
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth's radius in kilometers
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c; // Distance in kilometers
+// Function to calculate distance using Google Distance Matrix API
+const calculateDistanceGoogleAPI = async (fromCoordinates, toCoordinates) => {
+  try {
+    const response = await axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json`, {
+      params: {
+        origins: `${fromCoordinates.lat},${fromCoordinates.lon}`,
+        destinations: `${toCoordinates.lat},${toCoordinates.lon}`,
+        key: 'AIzaSyC9ZOZHwHmyTWXqACqpZY2TL7wX2_Zn05U', // Replace with your Google API key
+        mode: 'driving', // You can use 'walking', 'bicycling', 'transit', etc.
+      }
+    });
+
+    if (response.data && response.data.rows.length > 0 && response.data.rows[0].elements.length > 0) {
+      const distanceInfo = response.data.rows[0].elements[0];
+      if (distanceInfo.status === 'OK') {
+        return distanceInfo.distance.value / 1000; // Distance in kilometers
+      } else {
+        throw new Error('Unable to calculate distance');
+      }
+    } else {
+      throw new Error('Invalid response from Google Distance Matrix API');
+    }
+  } catch (error) {
+    console.error('Error calculating distance using Google API:', error.message);
+    return null;
+  }
 };
 
 // Main function to find distance between two locations
@@ -713,17 +727,42 @@ const getDistanceBetweenAirports = async (fromLocation, toLocation) => {
     const toCoordinates = await getCoordinates(toLocation);
 
     if (fromCoordinates && toCoordinates) {
-      const distance = calculateDistance(
-        fromCoordinates.lat, fromCoordinates.lon,
-        toCoordinates.lat, toCoordinates.lon
-      );
-      console.log(`Distance between ${fromLocation} and ${toLocation} is ${distance.toFixed(2)} km.`);
-      return distance;
+      const distance = await calculateDistanceGoogleAPI(fromCoordinates, toCoordinates);
+      if (distance !== null) {
+        console.log(`Distance between ${fromLocation} and ${toLocation} is ${distance.toFixed(2)} km.`);
+        return distance;
+      }
     }
   } catch (error) {
     console.error('Error calculating distance:', error.message);
   }
 };
+
+const getDistanceBetweenLocation = async (req,res,next) => {
+  try {
+
+    const {fromLocation,toLocation}=req.body
+    const fromCoordinates = await getCoordinates(fromLocation);
+    const toCoordinates = await getCoordinates(toLocation);
+
+    if (fromCoordinates && toCoordinates) {
+      const distance = await calculateDistanceGoogleAPI(fromCoordinates, toCoordinates);
+      if (distance !== null) {
+        console.log(`Distance between ${fromLocation} and ${toLocation} is ${distance.toFixed(2)} km.`);
+        res.status(200).json({
+          success:true,
+          message:"Distance is",
+          distance
+        })
+      }else{
+        return next(new AppError("Distance not Found",402))
+      }
+    }
+  } catch (error) {
+     return next(new AppError(error.message,500))
+  }
+};
+
 
 
 const addAirpotBooking = async (req, res, next) => {
@@ -1845,5 +1884,7 @@ export {
     updateRate,
     addLocalTripBooking,
     addAirpotBooking,
-    addRoundTripBooking
+    addRoundTripBooking,
+    getDistanceBetweenAirports,
+    getDistanceBetweenLocation
 }

@@ -208,9 +208,8 @@ const updateAirpotRate = async (req, res, next) => {
     } catch (error) {
       return next(new AppError(error.message, 500));
     }
-  };
+};
   
-
 
 const deletAirpotCategory=async(req,res,next)=>{
     try{
