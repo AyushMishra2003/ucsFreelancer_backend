@@ -14,7 +14,7 @@ const BookingSchema = new Schema({
  },
   tripType: {
     type: String,
-    enum: ["Airport Trip", "Round Trip", "One-Way Trip", "Local"],
+    enum: ["Airport Trip", "Round", "One-Way Trip", "Local"],
     required: true,
   },
   fromLocation: {
@@ -30,12 +30,10 @@ const BookingSchema = new Schema({
     // required: true,
   },
   pickupAddress: {
-    type: String,
-    required: true,
+    type: String
   },
   dropAddress: {
-    type: String,
-    required: true,
+    type: String
   },
   category: {
     type: String,

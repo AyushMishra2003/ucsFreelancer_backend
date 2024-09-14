@@ -10,6 +10,7 @@ import LocalCityRate from '../../models/Local/LocalCityRateModel.js';
 import LocalCategoryModel from '../../models/Local/LocalCategoryModel.js';
 import axios from 'axios';
 import AirpotRateModel from '../../models/Airpot/AirpotRate.js';
+import roundCategoryModel from '../../models/Round/Round.category.model.js';
 
 
 const generateOTP = () => {
@@ -1071,6 +1072,184 @@ const addAirpotBooking = async (req, res, next) => {
 };
 
 
+const addRoundTripBooking = async (req, res, next) => {
+  try {
+    let {
+      fromLocation, toLocation, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
+    } = req.body;
+
+    console.log("req.body", req.body);
+    console.log(fromLocation, toLocation);
+
+    // Calculate distance between locations and double it for round trips
+    let totalDistance = await getDistanceBetweenAirports(fromLocation, toLocation);
+
+    console.log(`Total distance for round trip: ${totalDistance}`);
+    
+    // Fetch round trip rate based on the category
+    const roundTripRate = await roundCategoryModel.findOne({ name: category });
+
+    console.log(roundTripRate);
+
+    // Calculate total days between pickupDate and returnDate
+    const pickup = new Date(pickupDate);
+    const returnD = new Date(returnDate);
+    let totalDays = Math.ceil((returnD - pickup) / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
+    console.log(`Total days between pickup and return: ${totalDays}`);
+    totalDays=totalDays+1
+
+
+    // Calculate cost by days
+    const dailyRate = 250; // Example daily rate
+    const distanceByDays = (dailyRate * totalDays);
+    console.log(`Distance by days (dailyRate * totalDays): ${distanceByDays}`);
+
+    // Calculate distance for the round trip (2-way)
+    const roundTripDistance = totalDistance * 2;
+
+    console.log("round trip distance",roundTripDistance);
+    console.log(roundTripRate.perKm);
+    
+
+    // Calculate the cost for the distance
+    const distanceCost = (roundTripDistance * (roundTripRate.perKm))
+    const distanceDayCost=(distanceByDays*(roundTripRate.perKm))
+    console.log(`Distance cost (roundTripDistance * rate per km): ${distanceCost}`);
+
+    // Choose the greater value between distance cost and distance by days
+    const actualPrice = Math.max(distanceCost, distanceDayCost);
+    console.log(`The actual price (greater of distanceCost and distanceByDays): ${actualPrice}`);
+
+    // Validate required fields
+    if (!fromLocation || !toLocation || !tripType || !category || !pickupDate || !pickupTime || !returnDate || !email || !paymentMode) {
+      return next(new AppError("All required fields must be provided", 400));
+    }
+
+    const bookingId = await generateBookingId(bookingDate);
+
+    // Validate pickup and return times
+    const pickupTimeValidation = validateTime(pickupDate, pickupTime);
+    if (!pickupTimeValidation.valid) {
+      return next(new AppError(pickupTimeValidation.message, 400));
+    }
+
+    // Handle discount logic (same as in the airport trip)
+    let discountValue = 0;
+    let discountInfo;
+    if (voucherCode) {
+      discountInfo = await Discount.findOne({
+        voucherCode,
+        active: true,
+        $or: [
+          { expiryDate: { $exists: false } },
+          { expiryDate: { $gte: new Date() } }
+        ]
+      });
+
+      if (discountInfo && discountInfo.tripType === tripType) {
+        const discountExpiryDate = moment(discountInfo.expiryDate).endOf('day');
+        const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
+
+        // Check if the current date and time are within the discount's expiry date and time
+        if (discountExpiryDate.isBefore(new Date()) ||
+          (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
+          return next(new AppError("Discount has expired", 400));
+        }
+
+        // Apply discount based on its type
+        if (actualPrice >= discountInfo.discountLimit) {
+          if (discountInfo.discountType === 1) {
+            discountValue = (actualPrice * discountInfo.discountValue) / 100;
+          } else if (discountInfo.discountType === 2) {
+            discountValue = discountInfo.discountValue;
+          }
+        } else {
+          return next(new AppError("Price does not meet the discount limit", 400));
+        }
+      }
+    }
+
+    // Calculate total price after discount
+    const totalPrice = actualPrice - discountValue;
+
+    // Create the booking
+    const booking = new Booking({
+      bookingId,
+      fromLocation,
+      toLocation,
+      tripType,
+      category,
+      actualPrice,
+      discountValue,
+      totalPrice,
+      bookingDate,
+      bookingTime,
+      pickupDate,
+      pickupTime,
+      returnDate,
+      paymentMode,
+      status: "confirmed"
+    });
+
+    // Save booking and handle user logic
+    await booking.save();
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      if (!name || !phoneNumber) {
+        return next(new AppError("Name and phone number are required for new users", 400));
+      }
+      user = new User({
+        name,
+        email,
+        phoneNumber,
+        password: phoneNumber,
+        bookingHistory: [booking._id]
+      });
+
+      await user.save();
+    } else {
+      user.bookingHistory.push(booking._id);
+      await user.save();
+    }
+
+    // Send confirmation email
+    const bookingSubject = 'Round Trip Booking Confirmation';
+    const bookingMessage = `
+      <p>Dear ${user.name},</p>
+      <p>Your round trip booking has been confirmed. Here are the details:</p>
+      <ul>
+        <li>Trip Type: ${booking.tripType}</li>
+        <li>From: ${booking.fromLocation}</li>
+        <li>To: ${booking.toLocation}</li>
+        <li>Category: ${booking.category}</li>
+        <li>Actual Price: $${booking.actualPrice.toFixed(2)}</li>
+        <li>Discount Applied: $${booking.discountValue.toFixed(2)}</li>
+        <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
+        <li>Pickup Date: ${booking.pickupDate.toLocaleDateString()}</li>
+        <li>Pickup Time: ${booking.pickupTime}</li>
+        <li>Return Date: ${booking.returnDate}</li>
+      </ul>
+      <p>Thank you for booking with us!</p>
+      <p>Best regards,<br>UCS CAB Support Team</p>
+    `;
+    await sendEmail(user.email, bookingSubject, bookingMessage);
+
+    return res.status(200).json({
+      success: true,
+      message: "Round trip booking created and confirmed successfully.",
+      data: booking
+    });
+  } catch (error) {
+    console.error(error);
+    return next(new AppError("Something went wrong while creating the booking", 500));
+  }
+};
+
+
+
+
+
 
 
 const verifyOneWayBooking = async (req, res, next) => {
@@ -1181,8 +1360,6 @@ const verifyOneWayBooking = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
-
-
 const getOneWayBooking=async(req,res,next)=>{
     try{
           const {fromLocation,toLocation}=req.body
@@ -1207,8 +1384,6 @@ const getOneWayBooking=async(req,res,next)=>{
         return next(new AppError(error.message,500))
     }
 }
-
-
 const cancelOneWayBooking = async (req, res, next) => { 
   try{
     
@@ -1261,31 +1436,6 @@ const cancelOneWayBooking = async (req, res, next) => {
 
 
 };
-
-
-const getAllBooking = async (req, res, next) => {
-  try {
-      // Fetch all bookings that are not canceled and have status true
-      const bookings = await Booking.find().populate('userId', 'name email phoneNumber'); // Adjust fields as needed
-
-      console.log(bookings);
-      
-
-      if (bookings.length === 0) {
-          return next(new AppError("No bookings found", 404));
-      }
-
-      res.status(200).json({
-          success: true,
-          message: "Bookings details:",
-          data: bookings
-      });
-
-  } catch (error) {
-      return next(new AppError(error.message, 500));
-  }
-};
-
 const approveBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -1442,6 +1592,31 @@ const approveBooking = async (req, res, next) => {
   }
 };
 
+
+
+const getAllBooking = async (req, res, next) => {
+  try {
+      // Fetch all bookings that are not canceled and have status true
+      const bookings = await Booking.find().populate('userId', 'name email phoneNumber'); // Adjust fields as needed
+
+      console.log(bookings);
+      
+
+      if (bookings.length === 0) {
+          return next(new AppError("No bookings found", 404));
+      }
+
+      res.status(200).json({
+          success: true,
+          message: "Bookings details:",
+          data: bookings
+      });
+
+  } catch (error) {
+      return next(new AppError(error.message, 500));
+  }
+};
+
 const getSingleBooking=async(req,res,next)=>{
   try{
     const {id}=req.params
@@ -1541,8 +1716,6 @@ The Team`;
   }
 }
 
-
-
 const driverDetail = async (req, res, next) => {
   try {
     const { name, email, phoneNumber, carNumber } = req.body;
@@ -1612,7 +1785,6 @@ The Team`;
   }
 }
 
-
 const updateRate=async(req,res,next)=>{
   try{
     const {id}=req.params
@@ -1672,5 +1844,6 @@ export {
     driverDetail,
     updateRate,
     addLocalTripBooking,
-    addAirpotBooking
+    addAirpotBooking,
+    addRoundTripBooking
 }

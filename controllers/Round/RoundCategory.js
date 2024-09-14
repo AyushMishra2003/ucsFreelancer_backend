@@ -9,11 +9,11 @@ const addRoundCategory = async (req, res, next) => {
         // Extract data from the request body
         console.log("jai hp");
         
-        const { name, numberOfSeats, acAvailable, numberOfBags } = req.body;
+        const { name, numberOfSeats, acAvailable, numberOfBags,perKm,extraKm } = req.body;
         console.log(req.body); // Debugging purpose
 
         // Validate the data
-        if (!name || !numberOfSeats || !acAvailable || !numberOfBags) {
+        if (!name || !numberOfSeats || !acAvailable || !numberOfBags || !perKm || !extraKm) {
             return next(new AppError("All fields are required", 400));
         }
 
@@ -29,7 +29,9 @@ const addRoundCategory = async (req, res, next) => {
             name,
             numberOfBags: bags,
             numberOfSeats: seats,
-            acAvailable: isAcAvailable
+            acAvailable: isAcAvailable,
+            perKm,
+            extraKm
         });
 
         if (!roundCategory) {
@@ -65,6 +67,14 @@ const addRoundCategory = async (req, res, next) => {
     }
 };
 
+// const addRoundCityName=async(req,res,next)=>{
+//     try{
+
+//     }catch(error){
+//         retu
+//     }
+// }
+
 
 const getRoundCategory=async(req,res,next)=>{
     try{
@@ -93,12 +103,12 @@ const updateRoundCategory = async (req, res, next) => {
     try {
         // Extract data from the request body
         const { id } = req.params; // Get the ID from the route parameters
-        const { name, numberOfSeats, acAvailable, numberOfBags } = req.body;
+        const { name, numberOfSeats, acAvailable, numberOfBags,perKm,extraKm } = req.body;
 
         // Validate the data
-        if (!name || !numberOfSeats || !acAvailable || !numberOfBags) {
-            return next(new AppError("All fields are required", 400));
-        }
+        // if (!name || !numberOfSeats || !acAvailable || !numberOfBags) {
+        //     return next(new AppError("All fields are required", 400));
+        // }
 
         // Convert acAvailable to boolean if needed
         const isAcAvailable = acAvailable === 'true';
@@ -110,7 +120,7 @@ const updateRoundCategory = async (req, res, next) => {
         // Find and update the round category
         const roundCategory = await roundCategoryModel.findByIdAndUpdate(
             id,
-            { name, numberOfSeats: seats, numberOfBags: bags, acAvailable: isAcAvailable },
+            { name, numberOfSeats: seats, numberOfBags: bags, acAvailable: isAcAvailable,perKm,extraKm },
             { new: true, runValidators: true }
         );
 

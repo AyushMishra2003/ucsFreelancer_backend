@@ -1,5 +1,5 @@
 import { Router } from "express";
-import {  addAirpotBooking, addLocalTripBooking, addOneWayBooking, approveBooking, bookComplete, cancelOneWayBooking, driverDetail, getAllBooking, getOneWayBooking, getSingleBooking, updateRate, verifyOneWayBooking } from "../../controllers/Booking/OneWayBooking.controller.js";
+import {  addAirpotBooking, addLocalTripBooking, addOneWayBooking, addRoundTripBooking, approveBooking, bookComplete, cancelOneWayBooking, driverDetail, getAllBooking, getOneWayBooking, getSingleBooking, updateRate, verifyOneWayBooking } from "../../controllers/Booking/OneWayBooking.controller.js";
 
 
 
@@ -11,6 +11,7 @@ oneWayBookingRoute.post("/",addOneWayBooking)
 
 oneWayBookingRoute.post("/trip/local",addLocalTripBooking)
 oneWayBookingRoute.post("/trip/airpot",addAirpotBooking)
+oneWayBookingRoute.post("/trip/round",addRoundTripBooking)
 // oneWayBookingRoute.get("/available",getOneWayBooking)
 // oneWayBookingRoute.put("/verify",verifyOneWayBooking)
 oneWayBookingRoute.post("/cancel/:id",cancelOneWayBooking)

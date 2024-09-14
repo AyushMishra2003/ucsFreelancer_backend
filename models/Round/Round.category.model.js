@@ -30,6 +30,12 @@ const roundCategorySchema = new Schema(
       type: Number,
       required: true,
     },
+    perKm:{
+      type:Number
+    },
+    extraKm:{
+      type:Number
+    }
   },
   {
     timestamps: true,

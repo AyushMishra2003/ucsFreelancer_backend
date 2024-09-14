@@ -9,6 +9,6 @@ const termRoute=Router()
 
 termRoute.post("/",addLocalTC)
 termRoute.get("/",getLocalTc)
-termRoute.get("/trip",getSpecificTc)
+termRoute.post("/trip",getSpecificTc)
 
 export default termRoute
