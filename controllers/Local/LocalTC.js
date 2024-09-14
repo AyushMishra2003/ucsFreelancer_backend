@@ -13,6 +13,9 @@ const addLocalTC = async (req, res, next) => {
     // Find the single existing document
     let termCondition = await LocalTerm.findOne();
 
+    console.log(termCondition);
+    
+
     if (termCondition) {
       // Check if the tripType already exists in the data array
       const existingTripType = termCondition.data.find(
@@ -25,17 +28,17 @@ const addLocalTC = async (req, res, next) => {
           const existingTC = existingTripType.tC.find((item) => item._id.toString() === tcId);
           
           if (existingTC) {
-            existingTC.type = tC; // Update the type of the existing term
+            existingTC.text = tC; // Update the type of the existing term
           } else {
             return next(new AppError(`No term found with ID: ${tcId}`, 404));
           }
         } else {
           // If tcId is not provided, add a new term and condition
-          existingTripType.tC.push({ type: tC });
+          existingTripType.tC.push({ text: tC });
         }
       } else {
         // If tripType doesn't exist, add a new entry with tripType and tC array
-        termCondition.data.push({ tripType, tC: [{ type: tC }] });
+        termCondition.data.push({ tripType, tC: [{ text: tC }] });
       }
 
       // Save the updated document
@@ -51,7 +54,7 @@ const addLocalTC = async (req, res, next) => {
     } else {
       // If no document exists, create a new one with the tripType and tC array
       const newTermCondition = new LocalTerm({
-        data: [{ tripType, tC: [{ type: tC }] }],
+        data: [{ tripType, tC: [{ text: tC }] }],
       });
 
       await newTermCondition.save();

@@ -12,7 +12,7 @@ const LocalTermCondition = new Schema(
         tC: [
           {
             _id: { type: Schema.Types.ObjectId, default: () => new mongoose.Types.ObjectId() }, // Unique ObjectId for each tc
-            type: {
+            text: {
               type: String, // Term or condition text
               required: true
             },

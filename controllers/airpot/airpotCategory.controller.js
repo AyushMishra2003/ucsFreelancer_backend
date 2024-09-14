@@ -1,11 +1,12 @@
 
+import airpotCategory from '../../models/Airpot/AirpotCategoryModel.js'
 import AirpotRateModel from '../../models/Airpot/AirpotRate.js'
 import AppError from '../../utilis/error.utlis.js'
 
 const addAirpotCategory=async(req,res,next)=>{
     try{
          
-        const {airpotCategory}=req.body
+        const {name,numberOfSeats, acAvailable,numberOfBags}=req.body
 
         if(!airpotCategory){
             return next(new AppError("Airpot Category Required",400))
@@ -193,6 +194,24 @@ const deletAirpotCategory=async(req,res,next)=>{
     }
 }
 
+
+const getAirpotCategory=async(req,res,next)=>{
+  try{
+
+    const allCategory=await airpotCategory.find({})
+
+    res.status(200).json({
+      success:true,
+      message:"All Category",
+      data:allCategory
+    }
+    )
+
+  }catch(error){
+    return next(new AppError(error.message,500))
+  }
+}
+
 export {
     addAirpotCategory,
     getByAirpotCategory,
@@ -200,5 +219,6 @@ export {
     deletAirpotCategory,
     addAirpotRate,
     updateAirpotRate,
+    getAirpotCategory
 
 }

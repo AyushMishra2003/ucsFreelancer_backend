@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import cloudinary from 'cloudinary'
 import fs from 'fs'; // For file deletion if needed
 import LocalCategoryModel from "../models/Local/LocalCategoryModel.js";
+import airpotCategory from "../models/Airpot/AirpotCategoryModel.js";
 mongoose.set('strictQuery',false)
 
 const ConnectionToDB=async()=>{
@@ -77,6 +78,67 @@ const ConnectionToDB=async()=>{
 //   }
   
 //   updateExistingCategories();
+
+
+// async function updateAirpotCategory() {
+//     try {
+//       // Establish connection to the database
+//       await ConnectionToDB();
+  
+//       // Fetch all documents from the airpotCategory collection
+//       const categories = await airpotCategory.find({});
+  
+//       // Loop through each category to check and update fields
+//       for (const category of categories) {
+//         let updated = false;
+  
+//         // Ensure the `photo` field exists and has default values if missing
+//         if (!category.photo || !category.photo.public_id || !category.photo.secure_url) {
+//           category.photo = {
+//             public_id: "",
+//             secure_url: "",
+//           };
+//           updated = true;
+//         }
+  
+//         // Ensure `numberOfSeats` has a default value if missing
+//         if (category.numberOfSeats === undefined) {
+//           category.numberOfSeats = 3; // Default value
+//           updated = true;
+//         }
+  
+//         // Ensure `acAvailable` has a default value if missing
+//         if (category.acAvailable === undefined) {
+//           category.acAvailable = true; // Default value
+//           updated = true;
+//         }
+  
+//         // Ensure `numberOfBags` has a default value if missing
+//         if (category.numberOfBags === undefined) {
+//           category.numberOfBags = 2; // Default value
+//           updated = true;
+//         }
+  
+//         // Save the updated category if any field was modified
+//         if (updated) {
+//           await category.save();
+//           console.log(`Category with id ${category._id} updated successfully.`);
+//         }
+//       }
+  
+//       console.log("All airpotCategory documents updated with default values.");
+//     } catch (err) {
+//       console.error("Error updating airpotCategory documents:", err);
+//     } finally {
+//       // Close the MongoDB connection
+//       mongoose.connection.close();
+//     }
+//   }
+  
+  // Call the function to update `airpotCategory`
+//   updateAirpotCategory();
+
+
 
 
 

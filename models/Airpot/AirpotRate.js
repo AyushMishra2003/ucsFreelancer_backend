@@ -2,10 +2,10 @@ import { model, Schema, Types } from "mongoose";
 
 const airpotCityRateSchema = new Schema(
   {
-    airpotCategory: {
-      type: String,
-      required: true,
-      unique: true,
+    category: {
+      type: Types.ObjectId,
+      ref: "UCS_Airpot_Category",
+      // required: true,
     },
     rates: [
       {
