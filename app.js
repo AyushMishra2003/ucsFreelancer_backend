@@ -14,11 +14,13 @@ import chart from "./routes/chartrate.js";
 import airpotRoute from "./routes/airpot/airpot.route.js";
 import termRoute from "./routes/term.routes.js";
 import PayementRouter from "./routes/payment/payment.route.js";
+import paymentModeRoute from "./routes/payment.route.js";
 import { addRoundCategory } from "./controllers/Round/RoundCategory.js";
 import multer from 'multer';
 import roundRouter from "./routes/round/round.route.js";
 import { getDistanceBetweenAirports } from "./controllers/Booking/OneWayBooking.controller.js";
 import distanceRoute from "./routes/distanceRoute.js";
+import { addPaymentMode } from "./controllers/paymentMode/paymentMode.controller.js";
 
 // Load environment variables
 config();
@@ -51,6 +53,8 @@ app.use("/api/v1/airpot", airpotRoute);
 app.use("/api/v1/chart", chart);
 app.use("/api/v1/tc", termRoute);
 app.use("/api/v1/payment", PayementRouter);
+
+app.use("/api/v1/mode",paymentModeRoute)
 
 // Route for adding round category with file upload
 app.use("/api/v1/round",roundRouter);

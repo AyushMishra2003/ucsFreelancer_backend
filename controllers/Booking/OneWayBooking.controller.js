@@ -11,6 +11,7 @@ import LocalCategoryModel from '../../models/Local/LocalCategoryModel.js';
 import axios from 'axios';
 import AirpotRateModel from '../../models/Airpot/AirpotRate.js';
 import roundCategoryModel from '../../models/Round/Round.category.model.js';
+import airpotCategory from '../../models/Airpot/AirpotCategoryModel.js';
 
 
 const generateOTP = () => {
@@ -834,7 +835,11 @@ const addAirpotBooking = async (req, res, next) => {
     // Fetch city rate if it's a One-Way Trip
     let actualPrice = 0;
     if (tripType === 'Airport Trip') {
-      const airpotRate = await AirpotRateModel.findOne({ airpotCategory: category });
+      console.log(category);
+      
+      const airpotRate = await airpotCategory.findOne({ name: category });
+      console.log(airpotRate);
+      
       if (!airpotRate) {
         return next(new AppError("Rate information not found for the specified route", 400));
       }
