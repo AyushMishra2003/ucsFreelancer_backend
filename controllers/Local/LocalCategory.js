@@ -1,32 +1,59 @@
 import LocalCategoryModel from "../../models/Local/LocalCategoryModel.js";
 import AppError from '../../utilis/error.utlis.js'
-
+import cloudinary from "cloudinary";
+import fs from 'fs';
 
 const addLocalCategory=async(req,res,next)=>{
     try{
 
-        const {name,description}=req.body
-
-        if(!name){
-            return next(new AppError("Category Name is Required",400))
+        const {name,numberOfSeats, acAvailable,numberOfBags}=req.body
+        
+        if(!name || !numberOfBags || !acAvailable || !numberOfSeats){
+          return next(new AppError("All Field are Required",400))
         }
 
-        const localCategory=await LocalCategoryModel.create({
-            name,
-            description
+        const isAcAvailable = acAvailable === 'true'?true:false; // Adjust if 'true'/'false' strings are used
+
+        const localcategory=await LocalCategoryModel.create({
+           name,
+           numberOfBags,
+           acAvailable:isAcAvailable,
+           numberOfSeats,
+           photo:{
+            public_id:"",
+            secure_url:""
+           }
         })
 
-        if(!localCategory){
-            return next(new AppError("New Category Not Added",400))
+        
+
+        if(!localcategory){
+            return next(new AppError("Not Category  Created",402))
         }
 
-        await localCategory.save()
+        if (req.file) {
+          console.log('File Upload:', req.file);
+          const result = await cloudinary.v2.uploader.upload(req.file.path, {
+              folder: "lms",
+          });
+          if (result) {
+              localcategory.photo = {
+                  public_id: result.public_id,
+                  secure_url: result.secure_url
+              };
+              await localcategory.save(); 
+          }
 
+          // Remove the file using fs.unlinkSync
+          fs.unlinkSync(req.file.path); // Ensure correct file removal
+      }
+
+        await localcategory.save()
 
         res.status(200).json({
             success:true,
             message:"New Category Added",
-            data:localCategory
+            data:localcategory
         })
 
     }catch(error){

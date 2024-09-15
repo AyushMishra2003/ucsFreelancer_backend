@@ -2,7 +2,7 @@ import { Router } from "express";
 import { addLocalCategory, deletLocalCategory, editLocalCategory, getByLocationCategory } from "../../controllers/Local/LocalCategory.js";
 import { addCity, addRate, deleteRate, deleteSpecificCategory, getAllCityNames, getByLocation, getRate, laad, updateLocalRate, updateRate} from "../../controllers/Local/LocalRateChart.js";
 import { addLocalTC, getLocalTc } from "../../controllers/Local/LocalTC.js";
-
+import upload from "../../middleware/multer.middlware.js";
 
 
 
@@ -10,7 +10,7 @@ import { addLocalTC, getLocalTc } from "../../controllers/Local/LocalTC.js";
 
 const localCategoryRoute=Router()
 
-localCategoryRoute.post("/",addLocalCategory)
+localCategoryRoute.post("/",upload.single("photo"),addLocalCategory)
 localCategoryRoute.get("/",getByLocationCategory)
 localCategoryRoute.get("/city",getAllCityNames)
 localCategoryRoute.put("/:id",editLocalCategory)

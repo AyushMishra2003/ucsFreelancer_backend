@@ -8,16 +8,16 @@ const addRoundCategory = async (req, res, next) => {
     try {
         console.log("jai hp");
 
-        const { name, numberOfSeats, acAvailable, numberOfBags, perKm, extraKm } = req.body;
+        const { name, numberOfSeats, acAvailable, numberOfBags } = req.body;
         console.log(req.body); // Debugging purpose
 
         // Validate the data
-        if (!name || !numberOfSeats || !acAvailable || !numberOfBags || !perKm || !extraKm) {
+        if (!name || !numberOfSeats || !acAvailable || !numberOfBags ) {
             return next(new AppError("All fields are required", 400));
         }
 
         // Convert acAvailable to boolean
-        const isAcAvailable = acAvailable === 'true'; // Adjust if 'true'/'false' strings are used
+        const isAcAvailable = acAvailable === 'true'?true:false; // Adjust if 'true'/'false' strings are used
         const seats = Number(numberOfSeats);
         const bags = Number(numberOfBags);
 
@@ -27,8 +27,6 @@ const addRoundCategory = async (req, res, next) => {
             numberOfBags: bags,
             numberOfSeats: seats,
             acAvailable: isAcAvailable,
-            perKm,
-            extraKm,
             photo:{
                 public_id:"",
                 secure_url:""
@@ -72,6 +70,9 @@ const addRoundCategory = async (req, res, next) => {
             }
         }
 
+
+        await roundCategory.save()
+
         res.status(200).json({
             success: true,
             message: "Round Category Added successfully",
@@ -83,6 +84,41 @@ const addRoundCategory = async (req, res, next) => {
         return next(new AppError(error.message, 500));
     }
 };
+
+
+const addRoundRate=async(req,res,next)=>{
+    try{
+
+        const { perKm,extraKm}=req.body
+
+        const {id}=req.params
+
+        if(!perKm || !extraKm){
+            return next(new AppError("All Field are Required",400))
+        }
+
+        const validRound=await roundCategoryModel.findById(id)
+
+        if(!validRound){
+            return next(new AppError("Round Category Not Found",400))
+        }
+
+        validRound.perKm=perKm
+        validRound.extraKm=extraKm
+
+
+        await validRound.save()
+
+        res.status(200).json({
+            success:true,
+            message:"Rate Added Succesfully",
+            data:validRound
+        })
+
+    }catch(error){
+        return next(new AppError(error.message,500))
+    }
+}
 
 // const addRoundCityName=async(req,res,next)=>{
 //     try{
@@ -208,5 +244,6 @@ export {
     addRoundCategory,
     getRoundCategory,
     updateRoundCategory,
-    deleteRoundCategory
+    deleteRoundCategory,
+    addRoundRate
 }

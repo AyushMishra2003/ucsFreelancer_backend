@@ -8,7 +8,6 @@ import fs from 'fs';
 const addAirpotCategory=async(req,res,next)=>{
     try{
 
-      console.log("ayuus mishra");
       
         const {name,numberOfSeats, acAvailable,numberOfBags}=req.body
         
@@ -35,6 +34,9 @@ const addAirpotCategory=async(req,res,next)=>{
         if(!airpotcategory){
             return next(new AppError("Airpot Category Not Created",402))
         }
+
+        console.log(req.file);
+        
 
         if (req.file) {
           console.log('File Upload:', req.file);
