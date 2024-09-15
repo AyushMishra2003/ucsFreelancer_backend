@@ -49,102 +49,117 @@ const addRate = async (req, res, next) => {
     }
 };
   
-const getRate=async(req,res,next)=>{
-    try{
-
-        const allCityRate=await CityRate.find({})
-
-        if(!allCityRate){
-            return next(new AppError("Rate Not Found",400))
-        }
-
-        res.status(200).json({
-            success:true,
-            message:"All City Rate",
-            data:allCityRate
-        })
-
-    }catch(error){
-        return next(new AppError(error.message,500))
-    }
-}
-
-const getByLocation = async (req, res, next) => {
+const getRate = async (req, res, next) => {
   try {
-      const { fromCity, toCity } = req.body;
-
-      if (!fromCity || !toCity) {
-          return next(new AppError("Cities Are Required", 400));
-      }
-
-      // Fetch rates based on fromCity and toCity
-      const cityRate = await CityRate.findOne({ fromCity, toCity });
-
-      if (!cityRate) {
-          return next(new AppError("Cities Rates Not Found", 404));
-      }
-
-      // Format response data
-      const formattedRates = cityRate.rates.map(rate => ({
-          category: rate.category,
-          rate: rate.rate
-      }));
-
-      console.log(formattedRates);
-      
-
-      res.status(200).json({
-          success: true,
-          message: "Distance Rate Are:-",
-          data: formattedRates
+    // Find all CityRate documents and populate the category field
+    const allCityRates = await CityRate.find()
+      .populate({
+        path: 'rates.category', // Path to the field to populate
+        model: 'UCS_OneWay_Category', // The model to use for population
+        select: 'name photo numberOfSeats acAvailable numberOfBags' // Select fields to include
       });
 
+    if (!allCityRates || allCityRates.length === 0) {
+      return next(new AppError("Rate Not Found", 400));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "All City Rates",
+      data: allCityRates
+    });
   } catch (error) {
-      return next(new AppError(error.message, 500));
+    next(error); // Pass the error to the error handling middleware
   }
 };
 
 
-const updateRate = async (req, res, next) => {
-    try {
-      const { fromCity, toCity, category, rate } = req.body;
+const getByLocation = async (req, res, next) => {
+  try {
+    const { fromCity, toCity } = req.body;
 
-      console.log(req.body);
-      
-  
-      // Validate input
-      if (!fromCity || !toCity || !category || !rate) {
-        return next(new AppError("fromCity, toCity, category, and newRate are all required", 400));
-      }
-  
-      // Find the city rate document based on fromCity and toCity
-      const cityRate = await CityRate.findOne({ fromCity, toCity });
-  
-      if (!cityRate) {
-        return next(new AppError("No rate found for the given cities", 404));
-      }
-  
-      // Find the category in the rates array
-      const rateIndex = cityRate.rates.findIndex((rateObj) => rateObj.category === category);
-  
-      if (rateIndex === -1) {
-        return next(new AppError("No category found for the given cities", 404));
-      }
-  
-      // Update the rate for the specified category
-      cityRate.rates[rateIndex].rate = rate;
-  
-      // Save the updated document
-      await cityRate.save();
-  
-      res.status(200).json({
-        success: true,
-        message: "Rate updated successfully",
-        data: cityRate,
-      });
-    } catch (error) {
-      return next(new AppError(error.message, 500));
+    if (!fromCity || !toCity) {
+      return next(new AppError("Cities Are Required", 400));
     }
+
+    // Fetch rates based on fromCity and toCity, and populate the category field
+    const cityRate = await CityRate.findOne({ fromCity, toCity })
+      .populate({
+        path: 'rates.category', // Path to populate
+        model: 'UCS_OneWay_Category', // Model to use for population
+        select: 'name photo numberOfSeats acAvailable numberOfBags' // Fields to include
+      });
+
+    if (!cityRate) {
+      return next(new AppError("Cities Rates Not Found", 404));
+    }
+
+    // Format response data with populated category details
+    const formattedRates = cityRate.rates.map(rate => ({
+      category: {
+        _id: rate.category._id,
+        name: rate.category.name,
+        photo: rate.category.photo,
+        numberOfSeats: rate.category.numberOfSeats,
+        acAvailable: rate.category.acAvailable,
+        numberOfBags: rate.category.numberOfBags
+      },
+      rate: rate.rate
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Distance Rates Are:",
+      data: formattedRates
+    });
+
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+const updateRate = async (req, res, next) => {
+  try {
+    const { fromCity, toCity, categoryId, rate } = req.body;
+
+    // Validate input
+    if (!fromCity || !toCity || !categoryId || rate === undefined) {
+      return next(new AppError("fromCity, toCity, categoryId, and rate are all required", 400));
+    }
+
+    // Ensure categoryId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return next(new AppError("Invalid categoryId", 400));
+    }
+
+    // Find the city rate document based on fromCity and toCity
+    const cityRate = await CityRate.findOne({ fromCity, toCity });
+
+    if (!cityRate) {
+      return next(new AppError("No rate found for the given cities", 404));
+    }
+
+    // Find the category in the rates array
+    const rateIndex = cityRate.rates.findIndex(rateObj => rateObj.category.toString() === categoryId);
+
+    if (rateIndex === -1) {
+      return next(new AppError("No category found for the given cities", 404));
+    }
+
+    // Update the rate for the specified category
+    cityRate.rates[rateIndex].rate = rate;
+
+    // Save the updated document
+    await cityRate.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Rate updated successfully",
+      data: cityRate,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
 };
  
 const deleteRate = async (req, res, next) => {
@@ -264,6 +279,44 @@ const  getByLocationCategory = async (req, res, next) => {
 
 
 
+const getAllCities = async (req, res, next) => {
+  try {
+    // Aggregate to get unique fromCity and toCity
+    const cities = await CityRate.aggregate([
+      {
+        $group: {
+          _id: null,
+          fromCities: { $addToSet: "$fromCity" },
+          toCities: { $addToSet: "$toCity" }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          fromCities: 1,
+          toCities: 1
+        }
+      }
+    ]);
+
+    if (!cities.length) {
+      return next(new AppError("No cities found", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Cities fetched successfully",
+      data: cities[0]
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+
+
+
+
 
 
 
@@ -274,5 +327,6 @@ export {
     updateRate,
     getByLocation,
     deleteSpecificCategory,
-    getByLocationCategory
+    getByLocationCategory,
+    getAllCities
 }

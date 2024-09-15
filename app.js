@@ -21,7 +21,7 @@ import roundRouter from "./routes/round/round.route.js";
 import { getDistanceBetweenAirports } from "./controllers/Booking/OneWayBooking.controller.js";
 import distanceRoute from "./routes/distanceRoute.js";
 import { addPaymentMode } from "./controllers/paymentMode/paymentMode.controller.js";
-
+import oneWayRouter from "./routes/oneWay/oneway.routes.js";
 // Load environment variables
 config();
 
@@ -58,6 +58,7 @@ app.use("/api/v1/mode",paymentModeRoute)
 
 // Route for adding round category with file upload
 app.use("/api/v1/round",roundRouter);
+app.use("/api/v1/oneway",oneWayRouter);
 
 
 app.use("/api/v1/distance",distanceRoute)

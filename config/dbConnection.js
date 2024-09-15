@@ -3,6 +3,7 @@ import cloudinary from 'cloudinary'
 import fs from 'fs'; // For file deletion if needed
 import LocalCategoryModel from "../models/Local/LocalCategoryModel.js";
 import airpotCategory from "../models/Airpot/AirpotCategoryModel.js";
+import CityRate from "../models/Booking/CityRate.js";
 mongoose.set('strictQuery',false)
 
 const ConnectionToDB=async()=>{
@@ -137,6 +138,38 @@ const ConnectionToDB=async()=>{
   
   // Call the function to update `airpotCategory`
 //   updateAirpotCategory();
+
+// const addCategoryIdToExistingRates = async (newCategoryId) => {
+//     try {
+//       // Update all documents to add the new category ID to each rate
+//       const result = await CityRate.updateMany(
+//         {}, // Match all documents
+//         {
+//           $set: {
+//             "rates.$[].category": newCategoryId, // Update the category for all rates in each document
+//           },
+//         },
+//         {
+//           new: true, // Return the updated documents
+//           upsert: false, // Don't create a new document if none match the criteria
+//         }
+//       );
+  
+//       console.log("Updated CityRates:", result);
+//       return result;
+//     } catch (error) {
+//       console.error("Error adding category ID to existing rates:", error);
+//     }
+//   };
+  
+//   // Example usage:
+//   const newCategoryId = "66e67f04e29407e8b16cc73f"; // The new category ObjectId to add
+  
+//   addCategoryIdToExistingRates(newCategoryId);
+
+
+
+
 
 
 

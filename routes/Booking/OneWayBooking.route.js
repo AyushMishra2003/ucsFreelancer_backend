@@ -7,7 +7,7 @@ import {  addAirpotBooking, addLocalTripBooking, addOneWayBooking, addRoundTripB
 const oneWayBookingRoute=Router()
 
 
-oneWayBookingRoute.post("/",addOneWayBooking)
+oneWayBookingRoute.post("/trip/oneway",addOneWayBooking)
 
 oneWayBookingRoute.post("/trip/local",addLocalTripBooking)
 oneWayBookingRoute.post("/trip/airpot",addAirpotBooking)

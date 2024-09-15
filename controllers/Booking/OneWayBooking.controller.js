@@ -12,6 +12,7 @@ import axios from 'axios';
 import AirpotRateModel from '../../models/Airpot/AirpotRate.js';
 import roundCategoryModel from '../../models/Round/Round.category.model.js';
 import airpotCategory from '../../models/Airpot/AirpotCategoryModel.js';
+import oneWayCategoryModel from '../../models/oneway/Category.model.js';
 
 
 const generateOTP = () => {
@@ -157,7 +158,17 @@ const addOneWayBooking = async (req, res, next) => {
       if (!cityRate) {
         return next(new AppError("Rate information not found for the specified route", 400));
       }
-      const rateObj = cityRate.rates.find(rate => rate.category === category);
+
+      console.log(cityRate);
+
+
+
+      const onewayCategory = await oneWayCategoryModel.findOne({ name: category });
+      
+      
+      const rateObj = cityRate.rates.find(rate => rate.category.toString() === onewayCategory._id.toString());
+      console.log(rateObj);
+      
       if (!rateObj) {
         return next(new AppError("Rate category not found for the specified route", 400));
       }
