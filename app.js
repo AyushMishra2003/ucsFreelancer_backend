@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://ucscabdashboard.netlify.app'],
+    origin: ['http://localhost:5173', 'https://freelance.webakash1806.com'],
     credentials: true
 }));
 app.use(morgan('dev'));
