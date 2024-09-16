@@ -22,6 +22,7 @@ import { getDistanceBetweenAirports } from "./controllers/Booking/OneWayBooking.
 import distanceRoute from "./routes/distanceRoute.js";
 import { addPaymentMode } from "./controllers/paymentMode/paymentMode.controller.js";
 import oneWayRouter from "./routes/oneWay/oneway.routes.js";
+import generateInvoice from "./controllers/invoice/Invoice.controller.js";
 // Load environment variables
 config();
 
@@ -62,6 +63,9 @@ app.use("/api/v1/oneway",oneWayRouter);
 
 
 app.use("/api/v1/distance",distanceRoute)
+
+
+app.get("/api/v1/invoice/:id",generateInvoice)
 
 // Default route
 app.get("/", (req, res) => {
