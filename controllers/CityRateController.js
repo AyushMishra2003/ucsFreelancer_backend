@@ -91,7 +91,11 @@ const getByLocation = async (req, res, next) => {
       });
 
     if (!cityRate) {
-      return next(new AppError("Cities Rates Not Found", 404));
+       res.status(200).json({
+        success:true,
+        message:"Distance Rates Are",
+        data:[]
+       })
     }
 
     // Format response data with populated category details
