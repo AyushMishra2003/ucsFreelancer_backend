@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addUser, changePassword, changeStatus, deleteUser, forget_passoword, getUser, resendOtp, singleUser, updateProfile, userLogin, userLogout, verifyforget_password, verifyOTP } from "../../controllers/UserController.js";
+import { addUser, changePassword, changeStatus, deleteUser, forget_passoword, getBookingHistory, getUser, resendOtp, singleUser, updateProfile, userLogin, userLogout, verifyforget_password, verifyOTP } from "../../controllers/UserController.js";
 import upload from "../../middleware/multer.middlware.js";
 import { addAirpotBooking } from "../../controllers/DistanceController.js";
 
@@ -21,5 +21,6 @@ userRouter.post("/login", userLogin)
 userRouter.get("/logout", userLogout)
 userRouter.post("/status/:id", changeStatus)
 userRouter.post("/distance", addAirpotBooking)
+userRouter.get("/history/:id",getBookingHistory)
 
 export default userRouter

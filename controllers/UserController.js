@@ -1,8 +1,14 @@
+import mongoose from "mongoose";
+import Booking from "../models/Booking/Booking.model.js";
 import User from "../models/users/user.model.js";
 import AppError from "../utilis/error.utlis.js";
 import sendEmail from "../utilis/sendEmail.js";
 import cloudinary from "cloudinary";
 import fs from "fs/promises";
+const { ObjectId } = mongoose.Types;
+
+
+
 const generateOTP = () => {
   return Math.floor(10000 + Math.random() * 90000).toString(); // Generates a 5-digit OTP
 };
@@ -168,6 +174,53 @@ const getUser = async (req, res, next) => {
     return next(new AppError(error.message, 500))
   }
 }
+
+
+
+
+const getBookingHistory = async (req, res, next) => {
+  try {
+    const { id } = req.params; // User ID from request params
+
+    console.log("User ID is", id);
+
+    // Step 1: Find the user by ID
+    const user = await User.findById(id);
+
+    if (!user) {
+      return next(new AppError("User not found", 404)); // Handle case where user is not found
+    }
+
+    // Step 2: Check if the user has a bookingHistory array
+    if (!user.bookingHistory || user.bookingHistory.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No booking history found for this user",
+        bookingHistory: [] // Return empty array if no history found
+      });
+    }
+
+    // Step 3: Convert booking IDs to ObjectId instances
+    const bookingIds = user.bookingHistory.map(id => new ObjectId(id));
+
+    // Step 4: Find bookings by the array of booking IDs
+    const bookingHistory = await Booking.find({
+      _id: { $in: bookingIds }
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Booking history retrieved successfully",
+      bookingHistory
+    });
+
+  } catch (error) {
+    console.error(error); // Log error to console for debugging
+    return next(new AppError(error.message, 500)); // Handle any errors
+  }
+};
+
+
 
 const changePassword = async (req, res, next) => {
   try {
@@ -652,5 +705,6 @@ export {
   resendOtp,
   userLogout,
   changePassword,
-  updateProfile
+  updateProfile,
+  getBookingHistory
 }
