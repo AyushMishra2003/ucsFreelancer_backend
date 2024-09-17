@@ -595,7 +595,7 @@ const userLogout = async (req, res, next) => {
 const updateProfile = async (req, res, next) => {
   try {
     // Extracting full name and user ID from the request body and user
-    const { name, phoneNumber } = req.body
+    const { name, phoneNumber,isVerify } = req.body
     const { id } = req.params
     console.log(id)
     console.log(req.body.name)
@@ -616,6 +616,10 @@ const updateProfile = async (req, res, next) => {
     if (phoneNumber) {
       user.phoneNumber = await phoneNumber
     }
+    if (isVerify) {
+      user.isVerify = await isVerify
+    }
+
 
     console.log(user.profile)
 

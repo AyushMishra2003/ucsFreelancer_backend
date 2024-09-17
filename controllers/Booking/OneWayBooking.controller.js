@@ -1302,11 +1302,6 @@ const addRoundTripBooking = async (req, res, next) => {
 };
 
 
-
-
-
-
-
 const verifyOneWayBooking = async (req, res, next) => {
   try {
     const { email, otp, bookingId } = req.body;
@@ -1646,9 +1641,6 @@ const approveBooking = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
-
-
-
 const getAllBooking = async (req, res, next) => {
   try {
       // Fetch all bookings that are not canceled and have status true
@@ -1883,6 +1875,65 @@ const updateRate=async(req,res,next)=>{
   }
 }
 
+ const getBookingsNearCurrentTime = async (req, res) => {
+  const { userId } = req.params;
+
+  const now = new Date();
+  const thirtyMinutes = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+  // Define the start and end of the time range
+  const startTime = new Date(now.getTime() - thirtyMinutes);
+  const endTime = new Date(now.getTime() + thirtyMinutes);
+
+  try {
+    // Find bookings for the user within the time range
+    const bookings = await Booking.aggregate([
+      {
+        $match: {
+          userId: mongoose.Types.ObjectId(userId),
+          pickupDate: {
+            $gte: startTime,
+            $lte: endTime
+          }
+        }
+      },
+      {
+        $addFields: {
+          pickupDateTime: {
+            $dateFromParts: {
+              year: { $year: "$pickupDate" },
+              month: { $month: "$pickupDate" },
+              day: { $dayOfMonth: "$pickupDate" },
+              hour: { $hour: { $concat: ["$pickupTime", ":00"] } }, // Assuming pickupTime is in HH:MM format
+              minute: { $minute: { $concat: ["$pickupTime", ":00"] } },
+              second: 0
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          pickupDateTime: {
+            $gte: startTime,
+            $lte: endTime
+          }
+        }
+      },
+      {
+        $count: "numberOfBookings"
+      }
+    ]);
+
+    // Extract the count of bookings
+    const numberOfBookings = bookings.length > 0 ? bookings[0].numberOfBookings : 0;
+
+    res.json({ numberOfBookings });
+  } catch (error) {
+    console.error('Error fetching bookings:', error);
+    res.status(500).json({ error: 'An error occurred while fetching bookings.' });
+  }
+}
+
 
 
 
@@ -1902,5 +1953,6 @@ export {
     addAirpotBooking,
     addRoundTripBooking,
     getDistanceBetweenAirports,
-    getDistanceBetweenLocation
+    getDistanceBetweenLocation,
+    getBookingsNearCurrentTime
 }
