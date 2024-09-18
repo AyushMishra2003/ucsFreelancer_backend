@@ -1202,7 +1202,12 @@ const addRoundTripBooking = async (req, res, next) => {
         ]
       });
 
-      if (discountInfo && discountInfo.tripType === tripType) {
+      console.log(discountInfo);
+      
+
+      if (discountInfo && discountInfo.tripType === "Round Trip" ) {
+        console.log("aa raha hu main");
+        
         const discountExpiryDate = moment(discountInfo.expiryDate).endOf('day');
         const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
 
