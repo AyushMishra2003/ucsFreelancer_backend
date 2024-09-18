@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Discount from "../../models/discount/discount.model.js";
-import { addDiscount, changeStatus, deleteDiscount, discount, fetchDiscount, getDiscount, updateDiscount, updateExpiryDate } from "../../controllers/Discount/Disocunt.controller.js";
+import { addDiscount, changeStatus, deleteDiscount, discount, fetchDiscount, getDiscount, updateDiscount, updateExpiryDate, validateDiscountCode } from "../../controllers/Discount/Disocunt.controller.js";
 
 
 
@@ -13,6 +13,7 @@ discountRoute.put("/:id",changeStatus)
 discountRoute.put("/update/:id",updateDiscount)
 discountRoute.put("/:id/expiry",updateExpiryDate)
 discountRoute.get("/fetch",fetchDiscount)
+discountRoute.get("/valid",validateDiscountCode)
 discountRoute.delete("/:id",deleteDiscount)
 
 

@@ -955,6 +955,7 @@ const addAirpotBooking = async (req, res, next) => {
       pickupTime,
       pickupAddress,
       dropAddress,
+      airpotValue,
       paymentMode,
       status: "confirmed" // Set status to confirmed
     });
@@ -1130,7 +1131,7 @@ const addAirpotBooking = async (req, res, next) => {
 const addRoundTripBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
+      fromLocation, toLocation, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
     } = req.body;
 
     console.log("req.body", req.body);
@@ -1238,9 +1239,11 @@ const addRoundTripBooking = async (req, res, next) => {
       discountValue,
       totalPrice,
       bookingDate,
+      returnDate,
       bookingTime,
       pickupDate,
       pickupTime,
+      pickupAddress,
       returnDate,
       paymentMode,
       status: "confirmed"

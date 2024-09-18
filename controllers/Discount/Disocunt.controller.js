@@ -337,6 +337,78 @@ const deleteDiscount=async(req,res,next)=>{
 }
 
 
+const validateDiscountCode = async (req, res, next) => {
+    try {
+        const { voucherCode,tripType } = req.body; // Assuming voucherCode is passed as a URL parameter
+
+
+
+        if(!voucherCode || !tripType){
+            return next(new AppError("All Field are Required",400))
+        }
+
+        // Find the discount using the voucher code
+        const discount = await Discount.findOne({ voucherCode });
+
+        if (!discount) {
+            return res.status(404).json({
+                success: false,
+                message: "Discount code not found."
+            });
+        }
+
+        console.log(discount);
+        
+
+        if(discount.tripType!=tripType && discount.discountApplication===2){
+            res.status(200).json({
+                success:true,
+                message:"Discount Not valid",
+                discount:0
+            })
+        }
+
+        
+
+        // Get the current date and time
+        const now = new Date();
+
+        // Check if the discount is active and has not expired
+        if (!discount.active) {
+            return res.status(400).json({
+                success: false,
+                message: "Discount code is not active.",
+                discount:0
+            });
+        }
+
+        // Combine expiry date and time for comparison
+        const expiry = new Date(discount.expiryDate);
+        const [hours, minutes] = discount.expiryTime.split(':').map(Number);
+        expiry.setHours(hours);
+        expiry.setMinutes(minutes);
+
+        // Check if the discount has expired
+        if (expiry <= now) {
+            return res.status(400).json({
+                success: false,
+                message: "Discount code has expired.",
+                data:0
+            });
+        }
+
+        // Return the discount value
+        return res.status(200).json({
+            success: true,
+            message: "Discount code is valid.",
+            discount: discount.discountValue,
+        });
+    } catch (error) {
+        console.error(error);
+        return next(new AppError(error.message, 500));
+    }
+};
+
 
 export {
     addDiscount,
@@ -346,5 +418,6 @@ export {
     updateExpiryDate,
     updateDiscount,
     fetchDiscount,
-    deleteDiscount
+    deleteDiscount,
+    validateDiscountCode
 }
