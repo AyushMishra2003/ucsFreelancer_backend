@@ -402,6 +402,7 @@ const validateDiscountCode = async (req, res, next) => {
             success: true,
             message: "Discount code is valid.",
             discount: discount.discountValue,
+            dataType:discount.discountType
         });
     } catch (error) {
         console.error(error);
