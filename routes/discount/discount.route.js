@@ -13,7 +13,7 @@ discountRoute.put("/:id",changeStatus)
 discountRoute.put("/update/:id",updateDiscount)
 discountRoute.put("/:id/expiry",updateExpiryDate)
 discountRoute.get("/fetch",fetchDiscount)
-discountRoute.get("/valid",validateDiscountCode)
+discountRoute.post("/valid",validateDiscountCode)
 discountRoute.delete("/:id",deleteDiscount)
 
 

@@ -1700,9 +1700,16 @@ const bookComplete = async (req, res, next) => {
     }
 
     // Admin authorization
+    console.log(id);
+    
     const validBooking = await Booking.findById(id);
 
+    console.log(validBooking);
+    
+
     if (!validBooking) {
+      console.log("mai aaya hu kya");
+      
       return next(new AppError("Booking is not Valid", 404));
     }
 
@@ -1740,7 +1747,7 @@ const bookComplete = async (req, res, next) => {
 
       await validBooking.save();
     } else {
-      return next(new AppError("Booking is not Valid", 400));
+      return next(new AppError("Booking is Yet Not Ongoing", 400));
     }
 
     const subject = 'Your Driver Details Have Been Updated';
