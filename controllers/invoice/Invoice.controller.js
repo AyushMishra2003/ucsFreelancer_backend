@@ -73,7 +73,7 @@ const generateInvoice = async(req, res,next) => {
     .fontSize(12)
     .font("Helvetica-Bold")
     .text("Description", tableLeft, tableTop)
-    .text("Quantity", tableLeft + 200, tableTop)
+    // .text("Quantity", tableLeft + 200, tableTop)
     .text("Price", tableLeft + 300, tableTop)
     .text("Amount", tableLeft + 400, tableTop);
 
@@ -84,7 +84,7 @@ const generateInvoice = async(req, res,next) => {
   // Table Rows with lines
   const tableRows = [
     { description: `${booking?.fromLocation} - ${booking?. pickupAddress} : ${booking?.tripType})`, quantity: 1, price: `Rs ${booking?. totalPrice}`, amount: `Rs ${booking?. actualPrice}` },
-    { description: "IGST @18%", quantity: "", price: "Rs 1080", amount: "Rs 1080" },
+    { description: "IGST @5%",  price:  `Rs ${booking?.totalPrice}`, amount: `${booking?.totalPrice}` },
     { description: "Total", quantity: "", price: "", amount: `Rs ${booking?. actualPrice}` },
   ];
 
@@ -94,7 +94,7 @@ const generateInvoice = async(req, res,next) => {
     doc
       .font("Helvetica")
       .text(row.description, tableLeft, y)
-      .text(row.quantity, tableLeft + 200, y)
+      // .text(row.quantity, tableLeft + 200, y)
       .text(row.price, tableLeft + 300, y)
       .text(row.amount, tableLeft + 400, y);
 
@@ -114,9 +114,9 @@ const generateInvoice = async(req, res,next) => {
     .fontSize(12)
     .font("Helvetica-Bold")
     .text("Total", 350, totalAmountY)
-    .text("Rs. 7080", 450, totalAmountY)
-    .text("Paid Amount", 350, totalAmountY + 20)
-    .text("Rs. 7080", 450, totalAmountY + 20)
+    .text(`Rs. ${booking?.totalPrice}`, 450, totalAmountY)
+    .text("Paid Amount", `${booking?.totalPrice}`, totalAmountY + 20)
+    .text(`Rs. ${booking?.totalPrice}`, 450, totalAmountY + 20)
     .text("Balance Due", 350, totalAmountY + 40)
     .text("Rs. 0", 450, totalAmountY + 40);
 
