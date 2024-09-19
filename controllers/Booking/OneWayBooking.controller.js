@@ -111,7 +111,7 @@ const generateBookingId = async (bookingDate) => {
 const addOneWayBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, paymentMode
+      fromLocation, toLocation, tripType, category, bookingDate, bookingTime,gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, paymentMode
     } = req.body;
 
 
@@ -216,6 +216,11 @@ const addOneWayBooking = async (req, res, next) => {
       }
     }
 
+    if(gst){
+      const gstValue=actualPrice*5/100;
+      actualPrice=actualPrice+gstValue
+    }
+
     // Calculate the total price after discount
     const totalPrice = actualPrice - discountValue;
 
@@ -277,25 +282,89 @@ const addOneWayBooking = async (req, res, next) => {
       await user.save();
 
       // Send booking confirmation email to existing user
-      const bookingSubject = 'Booking Confirmation';
+      const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <p>Dear ${user.name},</p>
-        <p>Your booking has been confirmed. Here are the details:</p>
-        <ul>
-          <li>Trip Type: ${booking.tripType}</li>
-          <li>From: ${booking.fromLocation}</li>
-          <li>To: ${booking.toLocation}</li>
-          <li>Category: ${booking.category}</li>
-          <li>Actual Price: $${booking.actualPrice.toFixed(2)}</li>
-          <li>Discount Applied: $${booking.discountValue.toFixed(2)}</li>
-          <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
-          <li>Booking Date: ${booking.bookingDate.toLocaleDateString()}</li>
-          <li>Booking Time: ${booking.bookingTime}</li>
-          <li>Pickup Address: ${booking.pickupAddress}</li>
-          <li>Drop Address: ${booking.dropAddress}</li>
-        </ul>
-        <p>Thank you for booking with us!</p>
-        <p>Best regards,<br>UCS CAB Support Team</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <p>Dear ${user.name},</p>
+          <p>Your booking has been confirmed. Here are the details:</p>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th style="text-align: left; padding: 8px;">Booking Information</th>
+              <th style="text-align: left; padding: 8px;">Details</th>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+            </tr>
+          </table>
+      
+          <br />
+          
+          <p><strong>Terms and Conditions:</strong></p>
+          <ul>
+            <li>Charges for additional hours and kilometers will be billed separately.</li>
+            <li>Full payment for the booking is required before the trip.</li>
+            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+          </ul>
+      
+          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+      
+          <br />
+          
+             
+          <p><strong>Contact Information:</strong></p>
+          <p>Country Code: +${91}</p>
+          <p>Phone Number: ${9358585237}</p>
+          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+      
+          <br />
+          
+          <p>Thank you for booking with us!</p>
+          <p>Best regards,<br>UCS CAB Support Team</p>
+        </div>
       `;
       await sendEmail(user.email, bookingSubject, bookingMessage);
 
@@ -355,25 +424,89 @@ const addOneWayBooking = async (req, res, next) => {
       await booking.save();
 
       // Send booking confirmation email to new user
-      const bookingSubject = 'Booking Confirmation';
+      const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <p>Dear ${name},</p>
-        <p>Your booking has been confirmed. Here are the details:</p>
-        <ul>
-          <li>Trip Type: ${booking.tripType}</li>
-          <li>From: ${booking.fromLocation}</li>
-          <li>To: ${booking.toLocation}</li>
-          <li>Category: ${booking.category}</li>
-          <li>Actual Price: $${booking.actualPrice.toFixed(2)}</li>
-          <li>Discount Applied: $${booking.discountValue.toFixed(2)}</li>
-          <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
-          <li>Booking Date: ${booking.bookingDate.toLocaleDateString()}</li>
-          <li>Booking Time: ${booking.bookingTime}</li>
-          <li>Pickup Address: ${booking.pickupAddress}</li>
-          <li>Drop Address: ${booking.dropAddress}</li>
-        </ul>
-        <p>Thank you for booking with us!</p>
-        <p>Best regards,<br>UCS CAB Support Team</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <p>Dear ${user.name},</p>
+          <p>Your booking has been confirmed. Here are the details:</p>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th style="text-align: left; padding: 8px;">Booking Information</th>
+              <th style="text-align: left; padding: 8px;">Details</th>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+            </tr>
+          </table>
+      
+          <br />
+          
+          <p><strong>Terms and Conditions:</strong></p>
+          <ul>
+            <li>Charges for additional hours and kilometers will be billed separately.</li>
+            <li>Full payment for the booking is required before the trip.</li>
+            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+          </ul>
+      
+          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+      
+          <br />
+          
+             
+          <p><strong>Contact Information:</strong></p>
+          <p>Country Code: +${91}</p>
+          <p>Phone Number: ${9358585237}</p>
+          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+      
+          <br />
+          
+          <p>Thank you for booking with us!</p>
+          <p>Best regards,<br>UCS CAB Support Team</p>
+        </div>
       `;
       await sendEmail(email, bookingSubject, bookingMessage);
 
@@ -410,7 +543,7 @@ const addOneWayBooking = async (req, res, next) => {
 const addLocalTripBooking = async (req, res, next) => {
   try {
     let {
-      cityName, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode
+      cityName, tripType, category,gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode
     } = req.body;
 
     // console.log("req.body", req.body);
@@ -542,6 +675,11 @@ const addLocalTripBooking = async (req, res, next) => {
       }
     }
 
+    if(gst){
+      const gstValue=actualPrice*5/100;
+      actualPrice=actualPrice+gstValue
+    }
+
     // Calculate the total price after discount
     const totalPrice = actualPrice - discountValue;
 
@@ -602,11 +740,89 @@ const addLocalTripBooking = async (req, res, next) => {
       await user.save();
 
       // Send confirmation email
-      const bookingSubject = 'Booking Confirmation';
+      const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <p>Dear ${user.name},</p>
-        <p>Your booking has been confirmed. Details:</p>
-        ...
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <p>Dear ${user.name},</p>
+          <p>Your booking has been confirmed. Here are the details:</p>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th style="text-align: left; padding: 8px;">Booking Information</th>
+              <th style="text-align: left; padding: 8px;">Details</th>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+            </tr>
+          </table>
+      
+          <br />
+          
+          <p><strong>Terms and Conditions:</strong></p>
+          <ul>
+            <li>Charges for additional hours and kilometers will be billed separately.</li>
+            <li>Full payment for the booking is required before the trip.</li>
+            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+          </ul>
+      
+          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+      
+          <br />
+          
+             
+          <p><strong>Contact Information:</strong></p>
+          <p>Country Code: +${91}</p>
+          <p>Phone Number: ${9358585237}</p>
+          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+      
+          <br />
+          
+          <p>Thank you for booking with us!</p>
+          <p>Best regards,<br>UCS CAB Support Team</p>
+        </div>
       `;
       await sendEmail(user.email, bookingSubject, bookingMessage);
 
@@ -646,11 +862,89 @@ const addLocalTripBooking = async (req, res, next) => {
       booking.userId = user._id;
       await booking.save();
 
-      const bookingSubject = 'Booking Confirmation';
+      const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <p>Dear ${name},</p>
-        <p>Your booking has been confirmed. Details:</p>
-        ...
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <p>Dear ${user.name},</p>
+          <p>Your booking has been confirmed. Here are the details:</p>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th style="text-align: left; padding: 8px;">Booking Information</th>
+              <th style="text-align: left; padding: 8px;">Details</th>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+            </tr>
+          </table>
+      
+          <br />
+          
+          <p><strong>Terms and Conditions:</strong></p>
+          <ul>
+            <li>Charges for additional hours and kilometers will be billed separately.</li>
+            <li>Full payment for the booking is required before the trip.</li>
+            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+          </ul>
+      
+          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+      
+          <br />
+          
+             
+          <p><strong>Contact Information:</strong></p>
+          <p>Country Code: +${91}</p>
+          <p>Phone Number: ${9358585237}</p>
+          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+      
+          <br />
+          
+          <p>Thank you for booking with us!</p>
+          <p>Best regards,<br>UCS CAB Support Team</p>
+        </div>
       `;
       await sendEmail(email, bookingSubject, bookingMessage);
 
@@ -780,7 +1074,7 @@ const getDistanceBetweenLocation = async (req,res,next) => {
 const addAirpotBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation,  airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue
+      fromLocation, gst, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue
     } = req.body;
 
 
@@ -924,6 +1218,11 @@ const addAirpotBooking = async (req, res, next) => {
       }
     }
 
+    if(gst){
+      const gstValue=actualPrice*5/100;
+      actualPrice=actualPrice+gstValue
+    }
+
     // Calculate the total price after discount
     const totalPrice = actualPrice - discountValue;
     let pickupAddress=""
@@ -998,25 +1297,89 @@ const addAirpotBooking = async (req, res, next) => {
       await user.save();
 
       // Send booking confirmation email to existing user
-      const bookingSubject = 'Booking Confirmation';
+      const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <p>Dear ${user.name},</p>
-        <p>Your booking has been confirmed. Here are the details:</p>
-        <ul>
-          <li>Trip Type: ${booking.tripType}</li>
-          <li>From: ${booking.fromLocation}</li>
-          <li>To: ${booking.toLocation}</li>
-          <li>Category: ${booking.category}</li>
-          <li>Actual Price: $${booking.actualPrice.toFixed(2)}</li>
-          <li>Discount Applied: $${booking.discountValue.toFixed(2)}</li>
-          <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
-          <li>Booking Date: ${booking.bookingDate.toLocaleDateString()}</li>
-          <li>Booking Time: ${booking.bookingTime}</li>
-          <li>Pickup Address: ${booking.pickupAddress}</li>
-          <li>Drop Address: ${booking.dropAddress}</li>
-        </ul>
-        <p>Thank you for booking with us!</p>
-        <p>Best regards,<br>UCS CAB Support Team</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <p>Dear ${user.name},</p>
+          <p>Your booking has been confirmed. Here are the details:</p>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th style="text-align: left; padding: 8px;">Booking Information</th>
+              <th style="text-align: left; padding: 8px;">Details</th>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+            </tr>
+          </table>
+      
+          <br />
+          
+          <p><strong>Terms and Conditions:</strong></p>
+          <ul>
+            <li>Charges for additional hours and kilometers will be billed separately.</li>
+            <li>Full payment for the booking is required before the trip.</li>
+            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+          </ul>
+      
+          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+      
+          <br />
+          
+             
+          <p><strong>Contact Information:</strong></p>
+          <p>Country Code: +${91}</p>
+          <p>Phone Number: ${9358585237}</p>
+          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+      
+          <br />
+          
+          <p>Thank you for booking with us!</p>
+          <p>Best regards,<br>UCS CAB Support Team</p>
+        </div>
       `;
       await sendEmail(user.email, bookingSubject, bookingMessage);
 
@@ -1078,23 +1441,86 @@ const addAirpotBooking = async (req, res, next) => {
       // Send booking confirmation email to new user
       const bookingSubject = 'Booking Confirmation';
       const bookingMessage = `
-        <p>Dear ${name},</p>
-        <p>Your booking has been confirmed. Here are the details:</p>
-        <ul>
-          <li>Trip Type: ${booking.tripType}</li>
-          <li>From: ${booking.fromLocation}</li>
-          <li>To: ${booking.toLocation}</li>
-          <li>Category: ${booking.category}</li>
-          <li>Actual Price: $${booking.actualPrice.toFixed(2)}</li>
-          <li>Discount Applied: $${booking.discountValue.toFixed(2)}</li>
-          <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
-          <li>Booking Date: ${booking.bookingDate.toLocaleDateString()}</li>
-          <li>Booking Time: ${booking.bookingTime}</li>
-          <li>Pickup Address: ${booking.pickupAddress}</li>
-          <li>Drop Address: ${booking.dropAddress}</li>
-        </ul>
-        <p>Thank you for booking with us!</p>
-        <p>Best regards,<br>UCS CAB Support Team</p>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+          <p>Dear ${user.name},</p>
+          <p>Your booking has been confirmed. Here are the details:</p>
+          
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <th style="text-align: left; padding: 8px;">Booking Information</th>
+              <th style="text-align: left; padding: 8px;">Details</th>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+            </tr>
+          </table>
+      
+          <br />
+          
+          <p><strong>Terms and Conditions:</strong></p>
+          <ul>
+            <li>Charges for additional hours and kilometers will be billed separately.</li>
+            <li>Full payment for the booking is required before the trip.</li>
+            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+          </ul>
+      
+          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+      
+          <br />
+          
+          <p><strong>Contact Information:</strong></p>
+          <p>Country Code: +${91}</p>
+          <p>Phone Number: ${9358585237}</p>
+          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+      
+          <br />
+          
+          <p>Thank you for booking with us!</p>
+          <p>Best regards,<br>UCS CAB Support Team</p>
+        </div>
       `;
       await sendEmail(email, bookingSubject, bookingMessage);
 
@@ -1131,7 +1557,7 @@ const addAirpotBooking = async (req, res, next) => {
 const addRoundTripBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
+      fromLocation, toLocation,gst, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
     } = req.body;
 
     console.log("req.body", req.body);
@@ -1173,7 +1599,7 @@ const addRoundTripBooking = async (req, res, next) => {
     console.log(`Distance cost (roundTripDistance * rate per km): ${distanceCost}`);
 
     // Choose the greater value between distance cost and distance by days
-    const actualPrice = Math.max(distanceCost, distanceDayCost);
+    let actualPrice = Math.max(distanceCost, distanceDayCost);
     console.log(`The actual price (greater of distanceCost and distanceByDays): ${actualPrice}`);
 
     // Validate required fields
@@ -1230,6 +1656,11 @@ const addRoundTripBooking = async (req, res, next) => {
       }
     }
 
+    if(gst){
+      const gstValue=actualPrice*5/100;
+      actualPrice=actualPrice+gstValue
+    }
+
     // Calculate total price after discount
     const totalPrice = actualPrice - discountValue;
 
@@ -1257,6 +1688,9 @@ const addRoundTripBooking = async (req, res, next) => {
     // Save booking and handle user logic
     await booking.save();
     let user = await User.findOne({ email });
+    
+
+
 
     if (!user) {
       if (!name || !phoneNumber) {
@@ -1270,32 +1704,123 @@ const addRoundTripBooking = async (req, res, next) => {
         bookingHistory: [booking._id]
       });
 
+
+
       await user.save();
+      const otp = generateOTP();
+      const otpExpiresAt = Date.now() + 2 * 60 * 1000; // 2 minutes from now
+
+      user.otp = otp;
+      user.otpExpiresAt = otpExpiresAt;
+      await user.save();
+
+      const otpSubject = '🔒 Verify Your Account';
+      const otpMessage = `
+        <p>Hello ${name},</p>
+        <p>Your verification code is <strong>${otp}</strong>. Please use this code to complete your registration.</p>
+        <p>This code will expire in 2 minutes. If you did not request this, please ignore this email.</p>
+        <p>Best regards,<br>UCS CAB Support Team</p>
+      `;
+      await sendEmail(email, otpSubject, otpMessage);
+
+  
+
     } else {
+      booking.userId = user._id;
+      await booking.save();
+
       user.bookingHistory.push(booking._id);
       await user.save();
     }
 
+    
+
     // Send confirmation email
-    const bookingSubject = 'Round Trip Booking Confirmation';
+    const bookingSubject = `Booking Confirmation ${bookingId} `;
     const bookingMessage = `
-      <p>Dear ${user.name},</p>
-      <p>Your round trip booking has been confirmed. Here are the details:</p>
-      <ul>
-        <li>Trip Type: ${booking.tripType}</li>
-        <li>From: ${booking.fromLocation}</li>
-        <li>To: ${booking.toLocation}</li>
-        <li>Category: ${booking.category}</li>
-        <li>Actual Price: $${booking.actualPrice.toFixed(2)}</li>
-        <li>Discount Applied: $${booking.discountValue.toFixed(2)}</li>
-        <li>Total Price: $${booking.totalPrice.toFixed(2)}</li>
-        <li>Pickup Date: ${booking.pickupDate.toLocaleDateString()}</li>
-        <li>Pickup Time: ${booking.pickupTime}</li>
-        <li>Return Date: ${booking.returnDate}</li>
-      </ul>
-      <p>Thank you for booking with us!</p>
-      <p>Best regards,<br>UCS CAB Support Team</p>
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <p>Dear ${user.name},</p>
+        <p>Your booking has been confirmed. Here are the details:</p>
+        
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <th style="text-align: left; padding: 8px;">Booking Information</th>
+            <th style="text-align: left; padding: 8px;">Details</th>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
+          </tr>
+        </table>
+    
+        <br />
+        
+        <p><strong>Terms and Conditions:</strong></p>
+        <ul>
+          <li>Charges for additional hours and kilometers will be billed separately.</li>
+          <li>Full payment for the booking is required before the trip.</li>
+          <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
+          <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
+        </ul>
+    
+        <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
+    
+        <br />
+        
+           
+        <p><strong>Contact Information:</strong></p>
+        <p>Country Code: +${91}</p>
+        <p>Phone Number: ${9358585237}</p>
+        <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+        <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
+    
+        <br />
+        
+        <p>Thank you for booking with us!</p>
+        <p>Best regards,<br>UCS CAB Support Team</p>
+      </div>
     `;
+    
     await sendEmail(user.email, bookingSubject, bookingMessage);
 
     return res.status(200).json({

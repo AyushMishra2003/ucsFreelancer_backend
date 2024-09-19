@@ -4,6 +4,7 @@ import fs from 'fs'; // For file deletion if needed
 import LocalCategoryModel from "../models/Local/LocalCategoryModel.js";
 import airpotCategory from "../models/Airpot/AirpotCategoryModel.js";
 import CityRate from "../models/Booking/CityRate.js";
+import Booking from "../models/Booking/Booking.model.js";
 mongoose.set('strictQuery',false)
 
 const ConnectionToDB=async()=>{
@@ -168,6 +169,32 @@ const ConnectionToDB=async()=>{
 //   addCategoryIdToExistingRates(newCategoryId);
 
 
+// const updateBookingsWithGst = async () => {
+//     try {
+//       // Connect to the database (ensure this is done beforehand or within this function)
+//       await mongoose.connect(process.env.MONGODB_URL);
+  
+//       // Update all bookings to include gst: false if the field does not exist
+//       const result = await Booking.updateMany(
+//         { gst: { $exists: false } }, // Only update if gst doesn't exist
+//         { $set: { gst: false } }, // Set gst to false
+//         { upsert: false } // Don't create new documents, just update existing ones
+//       );
+
+//       const bookingsWithGst = await Booking.find({ gst: { $exists: true } });
+// console.log(`${bookingsWithGst.length} bookings already have the gst field.`);
+
+  
+//       console.log(`${result.modifiedCount} bookings were updated to include gst: false.`);
+//     } catch (err) {
+//       console.error("Error updating bookings:", err);
+//     } finally {
+//       // Close the database connection
+//       mongoose.connection.close();
+//     }
+//   };
+  
+//   updateBookingsWithGst();
 
 
 

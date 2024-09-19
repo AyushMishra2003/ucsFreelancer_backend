@@ -24,7 +24,7 @@ import Payment from "../../models/Payement/payment.model.js"
         console.log(amount)
         const razorAmount = await Number(amount) * 100
         const options = {
-            amount: razorAmount,
+            amount:  Math.ceil(razorAmount),
             currency: "INR",
             notes: {
                 purpose: forName

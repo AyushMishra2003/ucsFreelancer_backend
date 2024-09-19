@@ -68,6 +68,10 @@ const BookingSchema = new Schema({
     type: Number,
     default: 0,
   },
+  gst:{
+    type:Boolean,
+    default:false
+  },
   extraPrice: {
     type: Number,
     default: 0,
