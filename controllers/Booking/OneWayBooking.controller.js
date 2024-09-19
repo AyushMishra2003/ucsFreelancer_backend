@@ -111,7 +111,7 @@ const generateBookingId = async (bookingDate) => {
 const addOneWayBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation, tripType, category, bookingDate, bookingTime,gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, paymentMode
+      fromLocation, toLocation, tripType, category, bookingDate, bookingTime,gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress
     } = req.body;
 
 
@@ -129,9 +129,9 @@ const addOneWayBooking = async (req, res, next) => {
     
     // Validate required fields
 
-    console.log(fromLocation,toLocation,tripType,category,bookingDate,bookingTime,pickupDate,pickupTime,email,pickupAddress,dropAddress,paymentMode);
+    console.log(fromLocation,toLocation,tripType,category,bookingDate,bookingTime,pickupDate,pickupTime,email,pickupAddress,dropAddress);
 
-    if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress || !paymentMode) {
+    if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress ) {
       console.log("kya mai chala kya bhai");
       return next(new AppError("All required fields must be provided", 400));
     }
@@ -240,7 +240,6 @@ const addOneWayBooking = async (req, res, next) => {
       pickupTime,
       pickupAddress,
       dropAddress,
-      paymentMode,
       status: "confirmed" // Set status to confirmed
     });
 
