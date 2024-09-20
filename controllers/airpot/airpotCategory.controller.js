@@ -139,7 +139,11 @@ const getAirpotCity = async (req, res, next) => {
 
     // Validate that cityName is provided
     if (!cityName) {
-      return next(new AppError("City Name is required", 400));
+       res.status(200).json({
+         success:true,
+         message:"Category List",
+         data:[]
+       })
     }
 
     // Convert input to lowercase and trim whitespace
