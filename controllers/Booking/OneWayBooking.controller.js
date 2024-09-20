@@ -1076,7 +1076,7 @@ const getDistanceBetweenLocation = async (req,res,next) => {
 const addAirpotBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, gst,extraPerKm, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue
+      fromLocation, gst,extraPerKm,rate, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue
     } = req.body;
 
 
@@ -1139,45 +1139,53 @@ const addAirpotBooking = async (req, res, next) => {
 
 
 
+
+
+
     // Fetch city rate if it's a One-Way Trip
     let actualPrice = 0;
-    if (tripType === 'Airport Trip') {
-      console.log(category);
-      
-      const airpotRate = await airpotCategory.findOne({ name: category });
-      console.log(airpotRate);
-      
-      if (!airpotRate) {
-        return next(new AppError("Rate information not found for the specified route", 400));
-      }
-      console.log(airpotRate);
-      
-      // Convert distance to string if necessary to match the schema type
-      const distanceStr = distance.toString();
 
-      // console.log(totalDistance);
-      
-      
-      // Find rate for the exact distance
-      const rateObj = airpotRate.rates.find(rate => rate.kilometer === distanceStr);
+    const airpotRate = await airpotCategory.findOne({ name: category });
+    console.log(airpotRate);
+    
+    if (!airpotRate) {
+      return next(new AppError("Rate information not found for the specified route", 400));
+    }
+    console.log(airpotRate);
 
-      console.log(rateObj);
+    actualPrice=rate
+
+    // if (tripType === 'Airport Trip') {
+    //   console.log(category);
+      
+  
+      
+    //   // Convert distance to string if necessary to match the schema type
+    //   const distanceStr = distance.toString();
+
+    //   // console.log(totalDistance);
       
       
-      if (!rateObj) {
-        return next(new AppError("Rate category not found for the specified distance", 400));
-      }
+    //   // // Find rate for the exact distance
+    //   // const rateObj = airpotRate.rates.find(rate => rate.kilometer === distanceStr);
+
+    //   // console.log(rateObj);
       
-      // Extract the rate and calculate the actual price
-       actualPrice = rateObj.rate;
+      
+    //   // if (!rateObj) {
+    //   //   return next(new AppError("Rate category not found for the specified distance", 400));
+    //   // }
+      
+    //   // Extract the rate and calculate the actual price
+    //    actualPrice = rateObj.rate;
       
  
-      // Now, you can proceed with the calculated actualPrice
-      console.log(`The price for this route is: ${actualPrice}`);
+    //   // Now, you can proceed with the calculated actualPrice
+    //   console.log(`The price for this route is: ${actualPrice}`);
       
-      // Return the price or perform further actions
+    //   // Return the price or perform further actions
       
-    }
+    // }
 
     // Initialize discount
     let discountValue = 0;
