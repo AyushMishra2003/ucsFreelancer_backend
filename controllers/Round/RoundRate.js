@@ -130,7 +130,7 @@ const getRoundAllCity = async (req,res,next) => {
       console.error('Error fetching city names:', error);
        return(next(new AppError(error.message,500)))
     }
-  };
+};
 
 
 

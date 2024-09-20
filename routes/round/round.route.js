@@ -24,7 +24,7 @@ roundRouter.delete("/city/:id",deleteCityName)
 
 
 roundRouter.post("/city/rate",addRoundCity)
-roundRouter.get("/city/rate",getRoundCity)
+roundRouter.post("/city/rate/list",getRoundCity)
 roundRouter.get("/city/list",getRoundAllCity)
 
 
