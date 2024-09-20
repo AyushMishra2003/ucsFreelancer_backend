@@ -1569,9 +1569,6 @@ const addRoundTripBooking = async (req, res, next) => {
     
     // Fetch round trip rate based on the category
     // const roundTripRate = await roundCategoryModel.findOne({ name: category });
-
-    console.log(roundTripRate);
-
     // Calculate total days between pickupDate and returnDate
     const pickup = new Date(pickupDate);
     const returnD = new Date(returnDate);
@@ -1588,8 +1585,8 @@ const addRoundTripBooking = async (req, res, next) => {
     // Calculate distance for the round trip (2-way)
     const roundTripDistance = totalDistance * 2;
 
-    console.log("round trip distance",roundTripDistance);
-    console.log(roundTripRate.perKm);
+    // console.log("round trip distance",roundTripDistance);
+    // console.log(roundTripRate.perKm);
     
 
     // Calculate the cost for the distance
