@@ -2,7 +2,7 @@ import { Router } from "express";
 import { addRoundCategory, addRoundRate, deleteRoundCategory, getRoundCategory, updateRoundCategory } from "../../controllers/Round/RoundCategory.js";
 import upload from "../../middleware/multer.middlware.js";
 import { addCityName, deleteCityName, getCityName, updateCityName } from "../../controllers/Round/RoundCityName.js";
-import { addRoundCity, getRoundCity } from "../../controllers/Round/RoundRate.js";
+import { addRoundCity, getRoundAllCity, getRoundCity } from "../../controllers/Round/RoundRate.js";
 
 
 
@@ -18,13 +18,14 @@ roundRouter.delete("/:id",deleteRoundCategory)
 
 
 roundRouter.post("/city",addCityName)
-roundRouter.get("/city",getCityName)
+roundRouter.get("/city",getRoundAllCity)
 roundRouter.put("/city/:id",updateCityName)
 roundRouter.delete("/city/:id",deleteCityName)
 
 
 roundRouter.post("/city/rate",addRoundCity)
 roundRouter.get("/city/rate",getRoundCity)
+roundRouter.get("/city/list",getRoundAllCity)
 
 
 

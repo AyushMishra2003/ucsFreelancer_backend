@@ -109,9 +109,33 @@ const getRoundCity=async(req,res,next)=>{
     })
 }
 
+const getRoundAllCity = async (req,res,next) => {
+    try {
+      // Fetch only the cityName field from all documents
+      const cities = await RoundCityRate.find({}, { cityName: 1, _id: 0 });
+
+
+      if(!cities){
+        return next(new AppError("City Not Found",400))
+      }
+     
+      res.status(200).json({
+        success:true,
+        message:"All City Name",
+        data:cities
+      })
+
+
+    } catch (error) {
+      console.error('Error fetching city names:', error);
+       return(next(new AppError(error.message,500)))
+    }
+  };
+
 
 
 export {
     addRoundCity,
-    getRoundCity
+    getRoundCity,
+    getRoundAllCity
 }
