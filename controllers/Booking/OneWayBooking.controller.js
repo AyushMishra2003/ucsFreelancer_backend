@@ -1556,7 +1556,7 @@ const addAirpotBooking = async (req, res, next) => {
 const addRoundTripBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation,gst, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
+      fromLocation, toLocation,gst,extraPerKm,perKm, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
     } = req.body;
 
     console.log("req.body", req.body);
@@ -1568,7 +1568,7 @@ const addRoundTripBooking = async (req, res, next) => {
     console.log(`Total distance for round trip: ${totalDistance}`);
     
     // Fetch round trip rate based on the category
-    const roundTripRate = await roundCategoryModel.findOne({ name: category });
+    // const roundTripRate = await roundCategoryModel.findOne({ name: category });
 
     console.log(roundTripRate);
 
@@ -1593,8 +1593,8 @@ const addRoundTripBooking = async (req, res, next) => {
     
 
     // Calculate the cost for the distance
-    const distanceCost = (roundTripDistance * (roundTripRate.perKm))
-    const distanceDayCost=(distanceByDays*(roundTripRate.perKm))
+    const distanceCost = (roundTripDistance * perKm)
+    const distanceDayCost=(distanceByDays*(perKm))
     console.log(`Distance cost (roundTripDistance * rate per km): ${distanceCost}`);
 
     // Choose the greater value between distance cost and distance by days
@@ -1678,6 +1678,7 @@ const addRoundTripBooking = async (req, res, next) => {
       bookingTime,
       pickupDate,
       pickupTime,
+      extraPerKm,
       pickupAddress,
       returnDate,
       paymentMode,

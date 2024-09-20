@@ -68,6 +68,12 @@ const BookingSchema = new Schema({
     type: Number,
     default: 0,
   },
+  extraPerKm:{
+    type:Number,
+  },
+  extraPerHour:{
+    type:Number
+  },
   gst:{
     type:Boolean,
     default:false
