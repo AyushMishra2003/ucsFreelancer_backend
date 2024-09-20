@@ -162,7 +162,11 @@ const getAirpotCity = async (req, res, next) => {
 
     // If no matching city is found
     if (!matchedCity) {
-      return next(new AppError("City not found", 404));
+       res.status(200).json({
+        success:true,
+        message:"Category List",
+        data:[]
+       })
     }
 
     // Aggregate rates by category
