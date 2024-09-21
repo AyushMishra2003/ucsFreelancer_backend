@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { model, Schema, Types } from "mongoose";
 
 const rateSchema = new Schema(
   {
@@ -13,14 +13,17 @@ const rateSchema = new Schema(
     rates: [
       {
         category: {
-          type: String,
-          enum: ["Indigo", "Datsun", "Dxire", "Innova", "Premium_Sedan", "Ertiga", "InnovaCrysta","Swift","Brezza"],
-          required: true,
+          type: Types.ObjectId,
+          ref: "UCS_OneWay_Category",
+          // required: true,
         },
         rate: {
           type: Number,
           required: true,
         },
+        extraKm:{
+          type:Number
+        }
       },
     ],
   },

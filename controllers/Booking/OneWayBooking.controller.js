@@ -543,7 +543,7 @@ const addOneWayBooking = async (req, res, next) => {
 const addLocalTripBooking = async (req, res, next) => {
   try {
     let {
-      cityName, tripType, extraPerKm,extraPerHour,category,gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode
+      cityName, tripType, extraPerKm,extraPerHr,category,gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode
     } = req.body;
 
     // console.log("req.body", req.body);
@@ -699,7 +699,7 @@ const addLocalTripBooking = async (req, res, next) => {
       pickupAddress,
       dropAddress,
       extraPerKm,
-      extraPerHour,
+      extraPerHour:extraPerHr,
       paymentMode,
       status: "confirmed"
     });
@@ -1266,8 +1266,10 @@ const addAirpotBooking = async (req, res, next) => {
       dropAddress,
       airpotValue,
       paymentMode,
+      distance,
       extraPerKm,
-      status: "confirmed" // Set status to confirmed
+      status: "confirmed" // Set status to confirmed,
+
     });
 
     // Save booking first
@@ -1689,7 +1691,7 @@ const addRoundTripBooking = async (req, res, next) => {
       pickupTime,
       extraPerKm,
       pickupAddress,
-      returnDate,
+      distance,
       paymentMode,
       status: "confirmed"
     });

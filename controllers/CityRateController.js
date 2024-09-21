@@ -1,53 +1,65 @@
 import CityRate from "../models/Booking/CityRate.js";
+import oneWayCategoryModel from "../models/oneway/Category.model.js";
 import cityRate from "../routes/Booking/CarRate.js";
 import AppError from "../utilis/error.utlis.js";
 
 
 const addRate = async (req, res, next) => {
-    try {
-      const { fromCity, toCity, rate, category } = req.body;
-  
-      // Validate input
-      if (!fromCity || !toCity || !rate || !category) {
-        return next(new AppError("All fields are required", 400));
-      }
-  
-      // Find the existing city rate document
-      let cityRate = await CityRate.findOne({ fromCity, toCity });
-  
-      if (cityRate) {
-        // Check if the category already exists in the rates array
-        const categoryExists = cityRate.rates.some(
-          (rateObj) => rateObj.category === category
-        );
-  
-        if (categoryExists) {
-          return next(new AppError("Rate for this category already exists for the given cities", 400));
-        }
-  
-        // Add the new category and rate to the existing document
-        cityRate.rates.push({ category, rate });
-      } else {
-        // Create a new document for the fromCity and toCity pair
-        cityRate = await CityRate.create({
-          fromCity,
-          toCity,
-          rates: [{ category, rate }],
-        });
-      }
-  
-      // Save the updated or new document
-      await cityRate.save();
-  
-      res.status(200).json({
-        success: true,
-        message: "Rate is added successfully",
-        data: cityRate,
-      });
-    } catch (error) {
-      return next(new AppError(error.message, 500));
+  try {
+    const { fromCity, toCity, rate, category, extraKm } = req.body;
+
+    // Validate input
+    if (!fromCity || !toCity || !rate || !category) {
+      return next(new AppError("All fields are required", 400));
     }
+
+    // Find the category by name
+    const oneWayCategory = await oneWayCategoryModel.findOne({ name: category });
+
+    if (!oneWayCategory) {
+      return next(new AppError("Category not found", 400));
+    }
+
+    const categoryId = oneWayCategory._id;
+
+    // Find the existing city rate document for the city pair
+    let cityRate = await CityRate.findOne({ fromCity, toCity });
+
+    if (cityRate) {
+      // Check if the category already exists in the rates array
+      const categoryExists = cityRate.rates.some(
+        (rateObj) => String(rateObj.category) === String(categoryId)
+      );
+
+      if (categoryExists) {
+        return next(new AppError("Rate for this category already exists for the given cities", 400));
+      }
+
+      // If category does not exist, add the new category and rate
+      cityRate.rates.push({ category: categoryId, rate, extraKm });
+    } else {
+      // If no cityRate document exists, create a new one
+      cityRate = await CityRate.create({
+        fromCity,
+        toCity,
+        rates: [{ category: categoryId, rate, extraKm }],
+      });
+    }
+
+    // Save the updated or new document
+    await cityRate.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Rate added successfully",
+      data: cityRate,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
 };
+
+
   
 const getRate = async (req, res, next) => {
   try {

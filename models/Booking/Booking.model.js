@@ -74,6 +74,9 @@ const BookingSchema = new Schema({
   extraPerHour:{
     type:Number
   },
+  distance:{
+    type:String
+  },
   gst:{
     type:Boolean,
     default:false
@@ -89,6 +92,9 @@ const BookingSchema = new Schema({
   pickupTime: {
     type: String, // Format: HH:MM:SS or use a different format if needed
     required: true,
+  },
+  returnDate:{
+    type:Date
   },
   driverDetails: [{
     name: { type: String },
