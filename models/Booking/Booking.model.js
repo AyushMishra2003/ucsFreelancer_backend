@@ -85,6 +85,9 @@ const BookingSchema = new Schema({
     type: Number,
     default: 0,
   },
+  paymentMode:{
+    type:String
+  },
   pickupDate: {
     type: Date,
     required: true,

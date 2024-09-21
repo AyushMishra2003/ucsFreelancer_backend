@@ -252,8 +252,6 @@ const deleteSpecificCategory=async(req,res,next)=>{
 }
 
 
-
-
 const  getByLocationCategory = async (req, res, next) => {
   try {
       const { fromCity, toCity, category } = req.body;
@@ -293,9 +291,6 @@ const  getByLocationCategory = async (req, res, next) => {
       return next(new AppError(error.message, 500));
   }
 };
-
-
-
 
 
 const getAllCities = async (req, res, next) => {
