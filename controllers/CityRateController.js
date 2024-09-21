@@ -102,6 +102,9 @@ const getByLocation = async (req, res, next) => {
         select: 'name photo numberOfSeats acAvailable numberOfBags' // Fields to include
       });
 
+      console.log(cityRate);
+      
+
     if (!cityRate) {
        res.status(200).json({
         success:true,
@@ -111,22 +114,22 @@ const getByLocation = async (req, res, next) => {
     }
 
     // Format response data with populated category details
-    const formattedRates = cityRate.rates.map(rate => ({
-      category: {
-        _id: rate.category._id,
-        name: rate.category.name,
-        photo: rate.category.photo,
-        numberOfSeats: rate.category.numberOfSeats,
-        acAvailable: rate.category.acAvailable,
-        numberOfBags: rate.category.numberOfBags
-      },
-      rate: rate.rate
-    }));
+    // const formattedRates = cityRate.rates.map(rate => ({
+    //   category: {
+    //     _id: rate.category._id,
+    //     name: rate.category.name,
+    //     photo: rate.category.photo,
+    //     numberOfSeats: rate.category.numberOfSeats,
+    //     acAvailable: rate.category.acAvailable,
+    //     numberOfBags: rate.category.numberOfBags
+    //   },
+    //   rate: rate.rate
+    // }));
 
     res.status(200).json({
       success: true,
       message: "Distance Rates Are:",
-      data: formattedRates
+      data:cityRate
     });
 
   } catch (error) {
