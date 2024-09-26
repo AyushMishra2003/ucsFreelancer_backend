@@ -1,7 +1,10 @@
+import { log } from "util";
 import roundCategoryModel from "../../models/Round/Round.category.model.js"
 import AppError from "../../utilis/error.utlis.js"
 import cloudinary from "cloudinary";
 import fs from 'fs';
+import RoundCityRate from "../../models/Round/Round.Rates.model.js";
+import { Types } from "mongoose";
 
 
 const addRoundCategory = async (req, res, next) => {
@@ -154,83 +157,124 @@ const getRoundCategory=async(req,res,next)=>{
 
 const updateRoundCategory = async (req, res, next) => {
     try {
-        // Extract data from the request body
-        const { id } = req.params; // Get the ID from the route parameters
-        const { name, numberOfSeats, acAvailable, numberOfBags,perKm,extraKm } = req.body;
+        const { id } = req.params; // Assume categoryId is passed as a URL parameter
+        const { name, numberOfSeats, acAvailable, numberOfBags } = req.body;
+        console.log(req.body);
 
-        // Validate the data
-        // if (!name || !numberOfSeats || !acAvailable || !numberOfBags) {
-        //     return next(new AppError("All fields are required", 400));
-        // }
+        console.log("mai aaya hu");
 
-        // Convert acAvailable to boolean if needed
-        const isAcAvailable = acAvailable === 'true';
 
-        // Convert numberOfSeats and numberOfBags to numbers
-        const seats = Number(numberOfSeats);
-        const bags = Number(numberOfBags);
+        console.log(id);
+        
+        
+        
 
-        // Find and update the round category
-        const roundCategory = await roundCategoryModel.findByIdAndUpdate(
-            id,
-            { name, numberOfSeats: seats, numberOfBags: bags, acAvailable: isAcAvailable,perKm,extraKm },
-            { new: true, runValidators: true }
-        );
-
-        if (!roundCategory) {
-            return next(new AppError("Round Category Not Found", 404));
+        // Validate that categoryId is provided
+        if (!id) {
+            return next(new AppError("Category ID is required", 400));
         }
 
-        // Handle file upload if a new file is provided
+        // Validate input data
+        if (!name && !numberOfSeats && !acAvailable && !numberOfBags && !req.file) {
+            return next(new AppError("At least one field is required to update", 400));
+        }
+
+        // Find the existing category by ID
+        let roundCategory = await roundCategoryModel.findById(id);
+        if (!roundCategory) {
+            return next(new AppError("Category not found", 404));
+        }
+
+        // Update fields if they are provided
+        if (name) roundCategory.name = name;
+        if (numberOfSeats) roundCategory.numberOfSeats = Number(numberOfSeats);
+        if (acAvailable !== undefined) roundCategory.acAvailable = acAvailable === 'true';
+        if (numberOfBags) roundCategory.numberOfBags = Number(numberOfBags);
+
+        // Handle file upload if a new photo is provided
         if (req.file) {
-            console.log('File Upload:', req.file);
+            console.log("File Upload Process Started");
+
+            // If there is an existing photo, remove it from Cloudinary
+            if (roundCategory.photo && roundCategory.photo.public_id) {
+                await cloudinary.v2.uploader.destroy(roundCategory.photo.public_id);
+            }
+
+            // Upload the new photo to Cloudinary
             const result = await cloudinary.v2.uploader.upload(req.file.path, {
                 folder: "lms",
             });
+
             if (result) {
+                // Update the photo details
                 roundCategory.photo = {
                     public_id: result.public_id,
-                    secure_url: result.secure_url
+                    secure_url: result.secure_url,
                 };
-                await roundCategory.save(); // Save the round category with updated photo info
-            }
 
-            // Remove the file using fs.unlinkSync
-            fs.unlinkSync(req.file.path); // Ensure correct file removal
+                // Remove the uploaded file from the server
+                fs.unlinkSync(req.file.path);
+            } else {
+                console.error("Cloudinary upload failed.");
+                return next(new AppError("Failed to upload photo", 500));
+            }
         }
 
+        // Save the updated category
+        await roundCategory.save();
+
+        // Respond with success
         res.status(200).json({
             success: true,
-            message: "Round Category Updated successfully",
-            data: roundCategory
+            message: "Round Category updated successfully",
+            data: roundCategory,
         });
-
     } catch (error) {
+        console.error("Error in editRoundCategory:", error); // Log for debugging
         return next(new AppError(error.message, 500));
     }
 };
 
 
+
 const deleteRoundCategory = async (req, res, next) => {
     try {
-        // Extract the ID from the request parameters
+        // Extract the category ID from the request parameters
         const { id } = req.params;
 
-        // Find and delete the round category
-        const roundCategory = await roundCategoryModel.findByIdAndDelete(id);
+        console.log("mai aay ya nahi");
+        
 
+        // Find the round category by ID
+        const roundCategory = await roundCategoryModel.findById(id);
         if (!roundCategory) {
             return next(new AppError("Round Category Not Found", 404));
         }
+
+        console.log(roundCategory);
+        
+
+        // Find all cities that contain this category and remove the category from their rates array
+        const updatedCities = await RoundCityRate.updateMany(
+            { "rates.category": id }, // Filter: Find documents where the category is present in rates
+            { $pull: { rates: { category: id } } } // Remove the rates with the matching category
+        );
+
+
+        // Log the updated cities for debugging
+        console.log(`Updated Cities:`, updatedCities);
 
         // Delete the associated image from Cloudinary if it exists
         if (roundCategory.photo && roundCategory.photo.public_id) {
             await cloudinary.v2.uploader.destroy(roundCategory.photo.public_id);
         }
 
+        // Finally, delete the round category itself
+        await roundCategoryModel.findByIdAndDelete(id);
+
         res.status(200).json({
             success: true,
-            message: "Round Category Deleted successfully"
+            message: "Round Category Deleted successfully, and references removed from cities"
         });
 
     } catch (error) {

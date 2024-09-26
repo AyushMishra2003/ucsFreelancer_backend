@@ -1,7 +1,7 @@
 import LocalCityRate from "../../models/Local/LocalCityRateModel.js";
 import LocalCategoryModel from "../../models/Local/LocalCategoryModel.js";
 import AppError from "../../utilis/error.utlis.js";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const addRate = async (req, res, next) => {
     try {
@@ -176,62 +176,52 @@ const updateLocalRate = async (req, res, next) => {
 };
 
 const deleteRate = async (req, res, next) => {
+    const { cityName, categoryId } = req.body;
+
+    console.log("Request Body:", req.body);
+
     try {
-        const { cityName, category } = req.body;
-
-        // Log request data
-        console.log(req.body);
-
-        // Validate if cityName and category are provided
-        if (!cityName || !category) {
-            return next(new AppError("cityName and category are required", 400));
+        // Check if categoryId is valid
+        if (!Types.ObjectId.isValid(categoryId)) {
+            return res.status(400).json({ message: "Invalid categoryId format" });
         }
 
-        // Find the category by name to get the category ID
-        const validCategory = await LocalCategoryModel.findOne({ name: category });
+        // Find the city document
+        const city = await LocalCityRate.findOne({ cityName });
 
-        // Check if the category exists
-        if (!validCategory) {
-            return next(new AppError("Category not found", 404));
+        if (!city) {
+            return res.status(404).json({ message: 'City not found' });
         }
 
-        // Find city rate by cityName
-        const cityRate = await LocalCityRate.findOne({ cityName });
+        // Check if the category exists and filter out the rates
+        const updatedRates = city.rates.filter(rateObj => 
+            rateObj._id.toString() !== categoryId.toString()
+        );
 
-        // If no rate is found for the given city, return error
-        if (!cityRate) {
-            return next(new AppError("No rate found for the given city", 404));
-        }
+        console.log(updatedRates);
+        
 
-        // Check if the given category ID exists in the rates array
-        const rateIndex = cityRate.rates.findIndex(rate => rate.category.toString() === validCategory._id.toString());
+        // Update the city document with the new rates array
+        city.rates = updatedRates;
 
-        // If the category is not found in the rates array, return error
-        if (rateIndex === -1) {
-            return next(new AppError("No rate found for the given category in this city", 404));
-        }
+        // Save the updated city document
+        await city.save();
 
-        // Remove the rate that corresponds to the given category
-        cityRate.rates.splice(rateIndex, 1);
-
-        // Save the updated city rate document
-        await cityRate.save();
-
-        // Return success response
-        res.status(200).json({
-            success: true,
-            message: "Rate deleted successfully",
-            data: cityRate,
-        });
+        res.status(200).json({ message: 'Rate deleted successfully', city });
     } catch (error) {
-        // Handle any errors
-        return next(new AppError(error.message, 500));
+        console.error('Error deleting rate:', error);
+        res.status(500).json({ message: 'Failed to delete rate' });
     }
 };
 
+
 const deleteSpecificCategory = async (req, res, next) => {
     try {
+        console.log("aysuh don");
+        
         const { cityName } = req.body;
+        console.log(req.body);
+        
 
         if (!cityName) {
             return next(new AppError("City Name is Required", 400));
@@ -245,7 +235,7 @@ const deleteSpecificCategory = async (req, res, next) => {
 
         res.status(200).json({
             success: true,
-            message: "City Rate deleted successfully",
+            message: "City deleted successfully",
         });
     } catch (error) {
         return next(new AppError(error.message, 500));

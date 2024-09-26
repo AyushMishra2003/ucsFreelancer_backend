@@ -296,6 +296,13 @@ const  getByLocationCategory = async (req, res, next) => {
 const getAllCities = async (req, res, next) => {
   try {
     // Aggregate to get unique fromCity and toCity
+
+    console.log("ayush mishra");
+
+    const p1=await CityRate.find({})
+    console.log(p1);
+    
+    
     const cities = await CityRate.aggregate([
       {
         $group: {
@@ -314,13 +321,13 @@ const getAllCities = async (req, res, next) => {
     ]);
 
     if (!cities.length) {
-      return next(new AppError("No cities found", 404));
+      return next(new AppError("No cities found", 402));
     }
 
     res.status(200).json({
       success: true,
       message: "Cities fetched successfully",
-      data: cities[0]
+      data: cities
     });
   } catch (error) {
     return next(new AppError(error.message, 500));
