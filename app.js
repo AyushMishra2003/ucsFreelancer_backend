@@ -37,7 +37,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://freelance.webakash1806.com','https://ayush.webakash1806.com'],
+    origin: ['http://localhost:5173', 'https://freelance.webakash1806.com','https://ayush.webakash1806.com','https://ucscab.com','https://admin.ucs.ucscab.com'],
     credentials: true
 }));
 app.use(morgan('dev'));
