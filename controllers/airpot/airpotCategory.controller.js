@@ -243,7 +243,14 @@ const getAirpotCity = async (req, res, next) => {
 
 const updateAirportRate = async (req, res, next) => {
   try {
+
+    console.log("ayush mishra");
+    
     const { cityName, categoryId, kilometer,rate,extra } = req.body;
+
+
+    console.log(req.body);
+    
 
     // Validate input
     if (!cityName || !categoryId || !kilometer) {
@@ -488,29 +495,35 @@ const editAirpotCategory = async (req, res, next) => {
 
   
 
-const deletAirpotCategory=async(req,res,next)=>{
-    try{
+const deletAirpotCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
 
-        const {id}=req.params
-
-        const validCategory=await AirpotRateModel.findById(id)
-
-        if(!validCategory){
-            return next(new AppError("Category is Not Valid",400))
-        }
-
-
-        await AirpotRateModel.findByIdAndDelete(id)
-
-        res.status(200).json({
-            success:true,
-            message:"Airpot Categorty Delete Succesfully"
-        })
-
-    }catch(error){
-        return next(new AppError(error.message,500))
+    // Check if the category exists
+    const validCategory = await airpotCategory.findById(id);
+    if (!validCategory) {
+      return next(new AppError("Category is Not Valid", 400));
     }
-}
+
+    // Remove the category from all AirpotCityRate records
+    await AirpotCityRate.updateMany(
+      { 'rates.category': id }, // Find AirpotCityRate documents where the category matches the id
+      { $pull: { rates: { category: id } } } // Remove the rates with the matching category
+    );
+
+    // Now delete the category itself
+    await airpotCategory.findByIdAndDelete(id);
+
+    // Send a success response
+    res.status(200).json({
+      success: true,
+      message: "Airport Category deleted successfully, and its rates removed from relevant City Rates.",
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
 
 
 const getAirpotCategory=async(req,res,next)=>{

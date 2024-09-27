@@ -3,6 +3,7 @@ import AppError from "../../utilis/error.utlis.js"
 import cloudinary from "cloudinary";
 import fs from 'fs';
 import oneWayCategoryModel from "../../models/oneway/Category.model.js";
+import CityRate from "../../models/Booking/CityRate.js";
 
 
 const addOneWayCategory=async(req,res,next)=>{
@@ -86,7 +87,7 @@ const getOneWayCategory=async(req,res,next)=>{
 
         res.status(200).json({
             success:true,
-            message:"All Round Category",
+            message:"All One way Category",
             data:alloneWayCategory
         })
 
@@ -160,30 +161,40 @@ const updateOneWayCategory = async (req, res, next) => {
 
 const deleteOneWayCategory = async (req, res, next) => {
     try {
-        // Extract the ID from the request parameters
-        const { id } = req.params;
+      // Extract the ID from the request parameters
+      const { id } = req.params;
+  
+      // Find and delete the OneWay category
+      const oneWayCategory = await oneWayCategoryModel.findById(id);
+  
+      if (!oneWayCategory) {
+        return next(new AppError("OneWay Category Not Found", 404));
+      }
+  
+      // Remove the category from all CityRate records
+      await CityRate.updateMany(
+        { 'rates.category': id }, // Find CityRate documents where the category matches the id
+        { $pull: { rates: { category: id } } } // Remove the rates with the matching category
+      );
+    //   const oneWayCategory = await oneWayCategoryModel.findByIdAndDelete(id);
+  
+      // Delete the associated image from Cloudinary if it exists
+      if (oneWayCategory.photo && oneWayCategory.photo.public_id) {
+        await cloudinary.v2.uploader.destroy(oneWayCategory.photo.public_id);
+      }
 
-        // Find and delete the round category
-        const oneWayCategory = await oneWayCategoryModel.findByIdAndDelete(id);
-
-        if (!oneWayCategory) {
-            return next(new AppError("OneWay Category Not Found", 404));
-        }
-
-        // Delete the associated image from Cloudinary if it exists
-        if (oneWayCategory.photo && oneWayCategory.photo.public_id) {
-            await cloudinary.v2.uploader.destroy(oneWayCategory.photo.public_id);
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "OneWay Category Deleted successfully"
-        });
-
+      await oneWayCategoryModel.findByIdAndDelete(id);
+  
+      res.status(200).json({
+        success: true,
+        message: "OneWay Category deleted successfully, and its rates removed from relevant City Rates.",
+      });
+  
     } catch (error) {
-        return next(new AppError(error.message, 500));
+      return next(new AppError(error.message, 500));
     }
-};
+  };
+  
 
 
 
