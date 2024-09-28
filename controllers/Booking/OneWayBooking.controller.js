@@ -856,6 +856,7 @@ const addLocalTripBooking = async (req, res, next) => {
         name,
         email,
         phoneNumber,
+        password:phoneNumber,
         bookingHistory: [booking._id]
       });
 
@@ -948,6 +949,7 @@ const addLocalTripBooking = async (req, res, next) => {
           <p>Best regards,<br>UCS CAB Support Team</p>
         </div>
       `;
+      //  problem 
       await sendEmail(email, bookingSubject, bookingMessage);
 
       const otp = generateOTP();
