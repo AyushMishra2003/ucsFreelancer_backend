@@ -1,7 +1,7 @@
 import cookieParser from "cookie-parser";
 import { config } from "dotenv";
-import express from 'express';
-import cors from 'cors';
+import express from "express";
+import cors from "cors";
 import morgan from "morgan";
 import errorMiddleware from "./middleware/error.middleware.js";
 import userRouter from "./routes/users/users.routes.js";
@@ -16,13 +16,15 @@ import termRoute from "./routes/term.routes.js";
 import PayementRouter from "./routes/payment/payment.route.js";
 import paymentModeRoute from "./routes/payment.route.js";
 import { addRoundCategory } from "./controllers/Round/RoundCategory.js";
-import multer from 'multer';
+import multer from "multer";
 import roundRouter from "./routes/round/round.route.js";
 import { getDistanceBetweenAirports } from "./controllers/Booking/OneWayBooking.controller.js";
 import distanceRoute from "./routes/distanceRoute.js";
 import { addPaymentMode } from "./controllers/paymentMode/paymentMode.controller.js";
 import oneWayRouter from "./routes/oneWay/oneway.routes.js";
 import generateInvoice from "./controllers/invoice/Invoice.controller.js";
+import PageRouter from "./routes/pages/page.route.js";
+import strucutreRoute from "./routes/pages/strucure.route.js";
 // Load environment variables
 config();
 
@@ -30,18 +32,25 @@ config();
 const app = express();
 
 // Multer setup for file uploads
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: "uploads/" });
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-    origin: ['http://localhost:5173', 'https://freelance.webakash1806.com','https://ayush.webakash1806.com','https://ucscab.com','https://master.ucscab.com'],
-    credentials: true
-}));
-app.use(morgan('dev'));
-
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://freelance.webakash1806.com",
+      "https://ayush.webakash1806.com",
+      "https://ucscab.com",
+      "https://master.ucscab.com",
+    ],
+    credentials: true,
+  })
+);
+app.use(morgan("dev"));
 
 // Routes
 app.use("/api/v1/user", userRouter);
@@ -55,32 +64,31 @@ app.use("/api/v1/chart", chart);
 app.use("/api/v1/tc", termRoute);
 app.use("/api/v1/payment", PayementRouter);
 
-app.use("/api/v1/mode",paymentModeRoute)
+app.use("/api/v1/mode", paymentModeRoute);
 
 // Route for adding round category with file upload
-app.use("/api/v1/round",roundRouter);
-app.use("/api/v1/oneway",oneWayRouter);
+app.use("/api/v1/round", roundRouter);
+app.use("/api/v1/oneway", oneWayRouter);
 
+app.use("/api/v1/distance", distanceRoute);
 
-app.use("/api/v1/distance",distanceRoute)
-
-
-app.get("/api/v1/invoice/:id",generateInvoice)
+app.get("/api/v1/invoice/:id", generateInvoice);
+app.use("/api/v1/page", strucutreRoute);
 
 // Default route
 app.get("/", (req, res) => {
-    res.status(200).json({
-      message: "Server is running and ready.",
-    });
+  res.status(200).json({
+    message: "Server is running and ready.",
+  });
 });
-  
+
 // Catch-all route for undefined endpoints
 app.all("*", (req, res) => {
-    res.status(404).json({
-      success: false,
-      status: 404,
-      message: "Oops! Not Found",
-    });
+  res.status(404).json({
+    success: false,
+    status: 404,
+    message: "Oops! Not Found",
+  });
 });
 
 // Error handling middleware
