@@ -25,6 +25,7 @@ import oneWayRouter from "./routes/oneWay/oneway.routes.js";
 import generateInvoice from "./controllers/invoice/Invoice.controller.js";
 import PageRouter from "./routes/pages/page.route.js";
 import strucutreRoute from "./routes/pages/strucure.route.js";
+import dynamicRoute from "./routes/DynamicPage/dynamicpage.route.js";
 // Load environment variables
 config();
 
@@ -73,7 +74,7 @@ app.use("/api/v1/oneway", oneWayRouter);
 app.use("/api/v1/distance", distanceRoute);
 
 app.get("/api/v1/invoice/:id", generateInvoice);
-app.use("/api/v1/page", strucutreRoute);
+app.use("/api/v1/dynamic", dynamicRoute);
 
 // Default route
 app.get("/", (req, res) => {
