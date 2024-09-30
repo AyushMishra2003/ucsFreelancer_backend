@@ -61,8 +61,12 @@ const createSection = async (req, res) => {
 };
 
 const addChildrenToSection = async (req, res, next) => {
+  console.log("add chikd mai id");
   const { id } = req.params;
   const { title, description } = req.body;
+
+  
+   
 
   const children = [
     {
@@ -128,6 +132,64 @@ const getSectionsByPage = async (req, res) => {
   }
 };
 
-// Additional controllers remain unchanged...
+const getAllPages=async(req,res,next)=>{
+  try{
 
-export { createPage, createSection, getSectionsByPage, addChildrenToSection };
+    const allPages=await PageModel.find({})
+
+    if(!allPages){
+      return next(new AppError("Pages Not Found",400))
+    }
+
+    res.status(200).json({
+      success:true,
+      message:"All Pages",
+      data:allPages
+    })
+
+  }catch(error){
+    return next(new AppError(error.message,500))
+  }
+}
+
+
+
+const getSpecificSection = async (req, res) => {
+  const { pageName, sectionTitle } = req.body; // Assuming you're passing the section title as a parameter
+
+  try {
+    // Find the page by its name
+    const page = await PageModel.findOne({ name: pageName }).populate("sections");
+
+    if (!page) {
+      return res.status(404).json({
+        success: false,
+        message: "Page not found",
+      });
+    }
+
+    // Find the specific section by its title (or you can modify this to search by _id)
+    const section = page.sections.find(sec => sec.title === sectionTitle);
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        message: "Section not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      section,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching specific section",
+      error: error.message,
+    });
+  }
+};
+
+
+export { createPage, createSection, getSectionsByPage, addChildrenToSection,getAllPages,getSpecificSection };
