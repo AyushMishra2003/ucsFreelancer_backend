@@ -10,6 +10,16 @@ const childSchema = new Schema({
     type: String,
     required: true,
   },
+  photo: {
+    public_id: {
+      type: String,
+      default: "",
+    },
+    secure_url: {
+      type: String,
+      default: "",
+    },
+  },
 });
 
 // Main schema with potential child elements
@@ -22,6 +32,16 @@ const SectionSchema = new Schema(
     description: {
       type: String,
       required: true,
+    },
+    photo: {
+      public_id: {
+        type: String,
+        default: "",
+      },
+      secure_url: {
+        type: String,
+        default: "",
+      },
     },
     page: {
       type: String, // e.g., 'home', 'about', 'services'
