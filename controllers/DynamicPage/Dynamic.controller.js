@@ -30,62 +30,103 @@ const createSection = async (req, res) => {
   const { title, description, page } = req.body;
 
   try {
-    // Create a new section with optional children
-    const newSection = new SectionModel({
-      title,
-      description,
-      page,
-      photo: {
-        public_id: "",
-        secure_url: "",
-      },
-      children: [], // If no children provided, default to an empty array
-    });
+    // Check if a section with the same title already exists
+    let section = await SectionModel.findOne({ title });
 
-    if (req.file) {
-      console.log("File Upload:", req.file);
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        folder: "lms",
-      });
-      if (result) {
-        newSection.photo = {
-          public_id: result.public_id,
-          secure_url: result.secure_url,
-        };
+    if (section) {
+      // If the section exists, update the description and photo (if provided)
+      section.description = description || section.description;
+
+      // If a new file is uploaded, update the photo
+      if (req.file) {
+        console.log("File Upload:", req.file);
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folder: "lms",
+        });
+
+        if (result) {
+          // Update the photo field with the new file's details
+          section.photo = {
+            public_id: result.public_id,
+            secure_url: result.secure_url,
+          };
+        }
+
+        // Remove the file using fs.unlinkSync
+        fs.unlinkSync(req.file.path); // Ensure correct file removal
       }
-      // Remove the file using fs.unlinkSync
-      fs.unlinkSync(req.file.path); // Ensure correct file removal
+
+      // Save the updated section
+      await section.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Section updated successfully!",
+        section,
+      });
+    } else {
+      // If no section with the given title exists, create a new one
+      const newSection = new SectionModel({
+        title,
+        description,
+        page,
+        photo: {
+          public_id: "",
+          secure_url: "",
+        },
+        children: [], // Default to an empty array
+      });
+
+      // If a file is uploaded, upload it to Cloudinary
+      if (req.file) {
+        console.log("File Upload:", req.file);
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folder: "lms",
+        });
+
+        if (result) {
+          newSection.photo = {
+            public_id: result.public_id,
+            secure_url: result.secure_url,
+          };
+        }
+
+        // Remove the file using fs.unlinkSync
+        fs.unlinkSync(req.file.path); // Ensure correct file removal
+      }
+
+      // Save the new section to the database
+      await newSection.save();
+
+      // Update the associated page with the new section
+      await PageModel.findOneAndUpdate(
+        { name: page },
+        { $push: { sections: newSection._id } }, // Push the section ID to the sections array
+        { new: true }
+      );
+
+      res.status(201).json({
+        success: true,
+        message: "Section created successfully!",
+        section: newSection,
+      });
     }
-
-    // Save the section to the database
-    await newSection.save();
-
-    await PageModel.findOneAndUpdate(
-      { name: page },
-      { $push: { sections: newSection._id } }, // Push the section ID to the sections array
-      { new: true }
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "Section created successfully!",
-      section: newSection,
-    });
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error creating section",
+      message: "Error creating or updating section",
       error: error.message,
     });
   }
 };
 
+
 const addChildrenToSection = async (req, res, next) => {
   console.log("Add children method called");
-  const { id } = req.params;
+  const { id } = req.params; // Section ID
   const { title, description } = req.body;
 
-  // Create a new child object
+  // New child object to be added/updated
   const newChild = {
     title: title,
     description: description,
@@ -98,9 +139,10 @@ const addChildrenToSection = async (req, res, next) => {
   console.log("New child:", newChild);
 
   try {
-    // Check if the children array is empty or not
-    const section = await SectionModel.findById(id); // Fetch the section to check children
+    // Fetch the section by ID
+    const section = await SectionModel.findById(id);
 
+    // If the section doesn't exist, return 404
     if (!section) {
       return res.status(404).json({
         success: false,
@@ -108,55 +150,87 @@ const addChildrenToSection = async (req, res, next) => {
       });
     }
 
-    // Check the length of the children array
-    // if (section.children.length === 0) {
-    //   console.log("Children array is empty, adding the first child.");
-    // } else {
-    //   console.log("Children array is not empty, adding another child.");
-    // }
-
-    // Handle file upload if it exists
-    if (req.file) {
-      console.log("File Upload:", req.file);
-      const result = await cloudinary.v2.uploader.upload(req.file.path, {
-        folder: "lms",
-      });
-      console.log("Upload result:", result);
-
-      if (result) {
-        newChild.photo = {
-          public_id: result.public_id,
-          secure_url: result.secure_url,
-        };
-      }
-      // Remove the file after upload
-      fs.unlinkSync(req.file.path);
-    }
-
-    // Push the new child to the existing section's children array
-    const updatedSection = await SectionModel.findByIdAndUpdate(
-      id,
-      { $push: { children: newChild } }, // Adding the new child
-      { new: true } // Return the updated document
+    // Find if a child with the same title already exists
+    const existingChildIndex = section.children.findIndex(
+      (child) => child.title === title
     );
 
-    if (!updatedSection) {
-      return res.status(404).json({
-        success: false,
-        message: "Section not found while updating",
+    if (existingChildIndex !== -1) {
+      // Child with the same title exists, update its description and photo if applicable
+      console.log("Updating existing child...");
+      section.children[existingChildIndex].description =
+        description || section.children[existingChildIndex].description;
+
+      // Handle file upload if it exists
+      if (req.file) {
+        console.log("File Upload:", req.file);
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folder: "lms",
+        });
+        console.log("Upload result:", result);
+
+        // Update the photo field with the new file's details
+        if (result) {
+          section.children[existingChildIndex].photo = {
+            public_id: result.public_id,
+            secure_url: result.secure_url,
+          };
+        }
+
+        // Remove the file after upload
+        fs.unlinkSync(req.file.path);
+      }
+
+      // Save the updated section
+      await section.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Child updated successfully!",
+        section,
+      });
+    } else {
+      // If no child with the given title exists, add the new child to the array
+      console.log("Adding new child...");
+
+      // Handle file upload if it exists
+      if (req.file) {
+        console.log("File Upload:", req.file);
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+          folder: "lms",
+        });
+        console.log("Upload result:", result);
+
+        // Update the photo field with the new file's details
+        if (result) {
+          newChild.photo = {
+            public_id: result.public_id,
+            secure_url: result.secure_url,
+          };
+        }
+
+        // Remove the file after upload
+        fs.unlinkSync(req.file.path);
+      }
+
+      // Add the new child to the children array
+      section.children.push(newChild);
+
+      // Save the updated section
+      await section.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Child added successfully!",
+        section,
       });
     }
-
-    res.status(200).json({
-      success: true,
-      message: "Children added successfully!",
-      section: updatedSection,
-    });
   } catch (error) {
-    console.error("Error adding children:", error);
+    console.error("Error adding/updating child:", error);
     return next(new AppError(error.message, 500));
   }
 };
+
 
 // Controller to fetch all sections for a specific page
 const getSectionsByPage = async (req, res) => {

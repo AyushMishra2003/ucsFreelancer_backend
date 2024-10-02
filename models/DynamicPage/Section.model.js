@@ -5,6 +5,7 @@ const childSchema = new Schema({
   title: {
     type: String,
     required: true,
+    unique:true
   },
   description: {
     type: String,
@@ -28,6 +29,7 @@ const SectionSchema = new Schema(
     title: {
       type: String,
       required: true,
+      unique:true
     },
     description: {
       type: String,
