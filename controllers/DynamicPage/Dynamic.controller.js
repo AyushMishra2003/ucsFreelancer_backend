@@ -29,6 +29,8 @@ const createPage = async (req, res) => {
 const createSection = async (req, res) => {
   const { title, description, page } = req.body;
 
+  console.log(req.body);
+
   try {
     // Check if a section with the same title already exists
     let section = await SectionModel.findOne({ title });
@@ -119,7 +121,6 @@ const createSection = async (req, res) => {
     });
   }
 };
-
 
 const addChildrenToSection = async (req, res, next) => {
   console.log("Add children method called");
@@ -230,7 +231,6 @@ const addChildrenToSection = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
-
 
 // Controller to fetch all sections for a specific page
 const getSectionsByPage = async (req, res) => {
