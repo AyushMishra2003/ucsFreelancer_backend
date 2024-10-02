@@ -26,6 +26,7 @@ import generateInvoice from "./controllers/invoice/Invoice.controller.js";
 import PageRouter from "./routes/pages/page.route.js";
 import strucutreRoute from "./routes/pages/strucure.route.js";
 import dynamicRoute from "./routes/DynamicPage/dynamicpage.route.js";
+import inquiryRoute from "./routes/Inquiry/Inquiry.route.js";
 // Load environment variables
 config();
 
@@ -76,6 +77,7 @@ app.use("/api/v1/distance", distanceRoute);
 
 app.get("/api/v1/invoice/:id", generateInvoice);
 app.use("/api/v1/dynamic", dynamicRoute);
+app.use("/api/v1/inquiry", inquiryRoute);
 
 // Default route
 app.get("/", (req, res) => {
