@@ -3,6 +3,7 @@ import SectionModel from "../../models/DynamicPage/Section.model.js";
 import AppError from "../../utilis/error.utlis.js";
 import cloudinary from "cloudinary";
 import fs from "fs";
+import path from "path";
 // Controller to create a new page
 const createPage = async (req, res) => {
   const { name } = req.body;
@@ -26,10 +27,8 @@ const createPage = async (req, res) => {
 };
 
 // Controller to create a new section
-const createSection = async (req, res) => {
+const createSection = async (req, res,next) => {
   const { title, description, page } = req.body;
-
-  console.log(req.body);
 
   try {
     // Check if a section with the same title already exists
@@ -42,7 +41,11 @@ const createSection = async (req, res) => {
       // If a new file is uploaded, update the photo
       if (req.file) {
         console.log("File Upload:", req.file);
-        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+
+        // Normalize the path to avoid issues with backslashes on Windows
+        const normalizedPath = path.resolve(req.file.path).replace(/\\/g, '/');
+
+        const result = await cloudinary.v2.uploader.upload(normalizedPath, {
           folder: "lms",
         });
 
@@ -82,7 +85,11 @@ const createSection = async (req, res) => {
       // If a file is uploaded, upload it to Cloudinary
       if (req.file) {
         console.log("File Upload:", req.file);
-        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+
+        // Normalize the path to avoid issues with backslashes on Windows
+        const normalizedPath = path.resolve(req.file.path).replace(/\\/g, '/');
+
+        const result = await cloudinary.v2.uploader.upload(normalizedPath, {
           folder: "lms",
         });
 
@@ -114,13 +121,12 @@ const createSection = async (req, res) => {
       });
     }
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Error creating or updating section",
-      error: error.message,
-    });
+    console.log(error);
+    
+     return next(new AppError(error.message,500))
   }
 };
+
 
 const addChildrenToSection = async (req, res, next) => {
   console.log("Add children method called");
