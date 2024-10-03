@@ -43,18 +43,27 @@ const BookingSchema = new Schema({
     type: Number,
     required: true,
   },
+  gstPrice:{
+    type:Number
+  },
   discountValue: {
     type: Number,
     default: 0, // Amount or percentage of discount applied
   },
-  airpotValue:{
-    type:Number,
-    enum:[1,2]
+  extraPrice: {
+    type: Number,
+    default: 0,
   },
   totalPrice: {
     type: Number,
     required: true,
   },
+
+  airpotValue:{
+    type:Number,
+    enum:[1,2]
+  },
+
   voucherDiscount: {
     type: Number,
   },
@@ -81,10 +90,7 @@ const BookingSchema = new Schema({
     type:Boolean,
     default:false
   },
-  extraPrice: {
-    type: Number,
-    default: 0,
-  },
+
   paymentMode:{
     type:String
   },

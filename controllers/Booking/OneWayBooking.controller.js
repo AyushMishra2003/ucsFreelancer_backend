@@ -543,7 +543,7 @@ const addOneWayBooking = async (req, res, next) => {
 const addLocalTripBooking = async (req, res, next) => {
   try {
     let {
-      cityName, tripType, extraPerKm,extraPerHr,category,gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode
+      cityName, tripType, extraPerKm,extraPerHr,category,gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode , actualAmount,discountAmount,totalAmount,gstAmount
     } = req.body;
 
     // console.log("req.body", req.body);
@@ -613,7 +613,7 @@ const addLocalTripBooking = async (req, res, next) => {
 
       // Determine rate based on distance and duration
       if (distance === 80) {
-        console.log(("kya re pagal"));
+
         console.log(rateIndex);
         
         
@@ -675,13 +675,10 @@ const addLocalTripBooking = async (req, res, next) => {
       }
     }
 
-    if(gst){
-      const gstValue=actualPrice*5/100;
-      actualPrice=actualPrice+gstValue
-    }
+
 
     // Calculate the total price after discount
-    const totalPrice = actualPrice - discountValue;
+    // let totalPrice = actualPrice - discountValue;
 
     // Create the booking
     const booking = new Booking({
@@ -689,9 +686,10 @@ const addLocalTripBooking = async (req, res, next) => {
       cityName,
       tripType,
       category,
-      actualPrice,
-      discountValue,
-      totalPrice,
+      actualPrice:actualAmount,
+      discountValue:discountAmount,
+      totalPrice:totalAmount,
+      gstPrice:gstAmount,
       bookingDate,
       bookingTime,
       pickupDate,
@@ -1078,7 +1076,7 @@ const getDistanceBetweenLocation = async (req,res,next) => {
 const addAirpotBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, gst,extraPerKm,rate, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue
+      fromLocation, gst,extraPerKm,rate, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue,  actualAmount,discountAmount,totalAmount,gstAmount
     } = req.body;
 
 
@@ -1230,13 +1228,13 @@ const addAirpotBooking = async (req, res, next) => {
       }
     }
 
-    if(gst){
-      const gstValue=actualPrice*5/100;
-      actualPrice=actualPrice+gstValue
-    }
+    // if(gst){
+    //   const gstValue=actualPrice*5/100;
+    //   actualPrice=actualPrice+gstValue
+    // }
 
     // Calculate the total price after discount
-    const totalPrice = actualPrice - discountValue;
+    // const totalPrice = actualPrice - discountValue;
     let pickupAddress=""
     let dropAddress=""
     if(airpotValue===1){
@@ -1257,9 +1255,10 @@ const addAirpotBooking = async (req, res, next) => {
       dropAddress,
       tripType,
       category,
-      actualPrice,
-      discountValue,
-      totalPrice,
+      actualPrice:actualAmount,
+      discountValue:discountAmount,
+      totalPrice:totalAmount,
+      gstPrice:gstAmount,
       bookingDate,
       bookingTime,
       pickupDate,
@@ -1572,7 +1571,7 @@ const addAirpotBooking = async (req, res, next) => {
 const addRoundTripBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation,gst,extraPerKm,perKm, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance
+      fromLocation, toLocation,gst,extraPerKm,perKm, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance,  actualAmount,discountAmount,totalAmount,gstAmount
     } = req.body;
 
     console.log("req.body", req.body);
@@ -1668,13 +1667,13 @@ const addRoundTripBooking = async (req, res, next) => {
       }
     }
 
-    if(gst){
-      const gstValue=actualPrice*5/100;
-      actualPrice=actualPrice+gstValue
-    }
+    // if(gst){
+    //   const gstValue=actualPrice*5/100;
+    //   actualPrice=actualPrice+gstValue
+    // }
 
-    // Calculate total price after discount
-    const totalPrice = actualPrice - discountValue;
+    // // Calculate total price after discount
+    // const totalPrice = actualPrice - discountValue;
 
     // Create the booking
     const booking = new Booking({
@@ -1683,9 +1682,10 @@ const addRoundTripBooking = async (req, res, next) => {
       toLocation,
       tripType,
       category,
-      actualPrice,
-      discountValue,
-      totalPrice,
+      actualPrice:actualAmount,
+      discountValue:discountAmount,
+      totalPrice:totalAmount,
+      gstPrice:gstAmount,
       bookingDate,
       returnDate,
       bookingTime,
