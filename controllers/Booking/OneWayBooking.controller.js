@@ -803,10 +803,6 @@ const addLocalTripBooking = async (req, res, next) => {
       <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
     </tr>
     <tr>
-      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
-      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
-    </tr>
-    <tr>
       <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
       <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
     </tr>

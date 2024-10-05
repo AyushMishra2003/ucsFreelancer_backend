@@ -41,7 +41,7 @@ const BookingSchema = new Schema({
   },
   actualPrice: {
     type: Number,
-    required: true,
+    // required: true,
   },
   gstPrice:{
     type:Number
@@ -56,7 +56,7 @@ const BookingSchema = new Schema({
   },
   totalPrice: {
     type: Number,
-    required: true,
+    // required: true,
   },
 
   airpotValue:{
