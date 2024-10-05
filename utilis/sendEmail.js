@@ -23,7 +23,7 @@ const sendEmail = async function (email, subject, message) {
         html: message,
     });
 
-    console.log("Email sent:", message);
+    
 }
 
 export default sendEmail;

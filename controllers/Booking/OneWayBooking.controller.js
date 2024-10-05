@@ -111,7 +111,7 @@ const generateBookingId = async (bookingDate) => {
 const addOneWayBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation, extraPerKm,tripType, category, bookingDate, bookingTime,gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress
+      fromLocation, toLocation, extraPerKm,tripType, category, bookingDate, bookingTime,gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress,actualAmount,discountAmount,totalAmount,gstAmount
     } = req.body;
 
 
@@ -216,13 +216,13 @@ const addOneWayBooking = async (req, res, next) => {
       }
     }
 
-    if(gst){
-      const gstValue=actualPrice*5/100;
-      actualPrice=actualPrice+gstValue
-    }
+    // if(gst){
+    //   const gstValue=actualPrice*5/100;
+    //   actualPrice=actualPrice+gstValue
+    // }
 
-    // Calculate the total price after discount
-    const totalPrice = actualPrice - discountValue;
+    // // Calculate the total price after discount
+    // const totalPrice = actualPrice - discountValue;
 
     // Create the booking
     const booking = new Booking({
@@ -231,9 +231,10 @@ const addOneWayBooking = async (req, res, next) => {
       toLocation,
       tripType,
       category,
-      actualPrice,
-      discountValue,
-      totalPrice,
+      actualPrice:actualAmount,
+      discountValue:discountAmount,
+      totalPrice:totalAmount,
+      gstPrice:gstAmount,
       bookingDate,
       bookingTime,
       pickupDate,
@@ -281,90 +282,108 @@ const addOneWayBooking = async (req, res, next) => {
       user.bookingHistory.push(booking._id);
       await user.save();
 
+
+      console.log(booking);
+      
+
       // Send booking confirmation email to existing user
       const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Dear ${user.name},</p>
-          <p>Your booking has been confirmed. Here are the details:</p>
-          
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="text-align: left; padding: 8px;">Booking Information</th>
-              <th style="text-align: left; padding: 8px;">Details</th>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-            </tr>
-          </table>
-      
-          <br />
-          
-          <p><strong>Terms and Conditions:</strong></p>
-          <ul>
-            <li>Charges for additional hours and kilometers will be billed separately.</li>
-            <li>Full payment for the booking is required before the trip.</li>
-            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-          </ul>
-      
-          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-      
-          <br />
-          
-             
-          <p><strong>Contact Information:</strong></p>
-          <p>Country Code: +${91}</p>
-          <p>Phone Number: ${9358585237}</p>
-          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-      
-          <br />
-          
-          <p>Thank you for booking with us!</p>
-          <p>Best regards,<br>UCS CAB Support Team</p>
-        </div>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+  <p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+     <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+  <h3>Customer Details</h3>
+  <p><strong>Customer Name:</strong> ${user?.name}</p>
+  <p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+  <p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+  <h3>ITINERARY</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>TOTAL AMOUNT (Including Service Tax)</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+      </tr>
+  
+    </tbody>
+  </table>
+
+  <h3>TRIP DETAILS</h3>
+  <p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+  <h3>Pickup Information</h3>
+  <p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+  <p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+  <h3>TERMS AND CONDITION</h3>
+  <ul style="line-height: 1.6;">
+    <li>Additional charges may apply for extra hours or kilometers.</li>
+    <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+    <li>The vehicle must be returned in clean condition.</li>
+    <li>Any damages to the vehicle during the trip will be charged.</li>
+  </ul>
+
+  <p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+  <p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+  <p><strong>Phone:</strong> +91 9358585237</p>
+  <p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+  <br />
+
+  <p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+  <p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
       `;
       await sendEmail(user.email, bookingSubject, bookingMessage);
 
@@ -426,87 +445,101 @@ const addOneWayBooking = async (req, res, next) => {
       // Send booking confirmation email to new user
       const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Dear ${user.name},</p>
-          <p>Your booking has been confirmed. Here are the details:</p>
-          
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="text-align: left; padding: 8px;">Booking Information</th>
-              <th style="text-align: left; padding: 8px;">Details</th>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-            </tr>
-          </table>
-      
-          <br />
-          
-          <p><strong>Terms and Conditions:</strong></p>
-          <ul>
-            <li>Charges for additional hours and kilometers will be billed separately.</li>
-            <li>Full payment for the booking is required before the trip.</li>
-            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-          </ul>
-      
-          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-      
-          <br />
-          
-             
-          <p><strong>Contact Information:</strong></p>
-          <p>Country Code: +${91}</p>
-          <p>Phone Number: ${9358585237}</p>
-          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-      
-          <br />
-          
-          <p>Thank you for booking with us!</p>
-          <p>Best regards,<br>UCS CAB Support Team</p>
-        </div>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+  <p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+     <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+  <h3>Customer Details</h3>
+  <p><strong>Customer Name:</strong> ${user?.name}</p>
+  <p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+  <p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+  <h3>ITINERARY</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>TOTAL AMOUNT (Including Service Tax)</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+      </tr>
+  
+    </tbody>
+  </table>
+
+  <h3>TRIP DETAILS</h3>
+  <p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+  <h3>Pickup Information</h3>
+  <p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+  <p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+  <h3>TERMS AND CONDITION</h3>
+  <ul style="line-height: 1.6;">
+    <li>Additional charges may apply for extra hours or kilometers.</li>
+    <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+    <li>The vehicle must be returned in clean condition.</li>
+    <li>Any damages to the vehicle during the trip will be charged.</li>
+  </ul>
+
+  <p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+  <p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+  <p><strong>Phone:</strong> +91 9358585237</p>
+  <p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+  <br />
+
+  <p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+  <p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
       `;
       await sendEmail(email, bookingSubject, bookingMessage);
 
@@ -742,88 +775,102 @@ const addLocalTripBooking = async (req, res, next) => {
       // Send confirmation email
       const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Dear ${user.name},</p>
-          <p>Your booking has been confirmed. Here are the details:</p>
-          
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="text-align: left; padding: 8px;">Booking Information</th>
-              <th style="text-align: left; padding: 8px;">Details</th>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-            </tr>
-          </table>
-      
-          <br />
-          
-          <p><strong>Terms and Conditions:</strong></p>
-          <ul>
-            <li>Charges for additional hours and kilometers will be billed separately.</li>
-            <li>Full payment for the booking is required before the trip.</li>
-            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-          </ul>
-      
-          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-      
-          <br />
-          
-             
-          <p><strong>Contact Information:</strong></p>
-          <p>Country Code: +${91}</p>
-          <p>Phone Number: ${9358585237}</p>
-          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-      
-          <br />
-          
-          <p>Thank you for booking with us!</p>
-          <p>Best regards,<br>UCS CAB Support Team</p>
-        </div>
-      `;
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+<p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+   <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+<h3>Customer Details</h3>
+<p><strong>Customer Name:</strong> ${user?.name}</p>
+<p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+<p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+<h3>ITINERARY</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>TOTAL AMOUNT (Including Service Tax)</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<h3>TRIP DETAILS</h3>
+<p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+<h3>Pickup Information</h3>
+<p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+<p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+<h3>TERMS AND CONDITION</h3>
+<ul style="line-height: 1.6;">
+  <li>Additional charges may apply for extra hours or kilometers.</li>
+  <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+  <li>The vehicle must be returned in clean condition.</li>
+  <li>Any damages to the vehicle during the trip will be charged.</li>
+</ul>
+
+<p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+<p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+<p><strong>Phone:</strong> +91 9358585237</p>
+<p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+<br />
+
+<p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+<p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
+    `;
       await sendEmail(user.email, bookingSubject, bookingMessage);
 
       if (!user.isVerify) {
@@ -865,87 +912,101 @@ const addLocalTripBooking = async (req, res, next) => {
 
       const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Dear ${user.name},</p>
-          <p>Your booking has been confirmed. Here are the details:</p>
-          
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="text-align: left; padding: 8px;">Booking Information</th>
-              <th style="text-align: left; padding: 8px;">Details</th>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-            </tr>
-          </table>
-      
-          <br />
-          
-          <p><strong>Terms and Conditions:</strong></p>
-          <ul>
-            <li>Charges for additional hours and kilometers will be billed separately.</li>
-            <li>Full payment for the booking is required before the trip.</li>
-            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-          </ul>
-      
-          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-      
-          <br />
-          
-             
-          <p><strong>Contact Information:</strong></p>
-          <p>Country Code: +${91}</p>
-          <p>Phone Number: ${9358585237}</p>
-          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-      
-          <br />
-          
-          <p>Thank you for booking with us!</p>
-          <p>Best regards,<br>UCS CAB Support Team</p>
-        </div>
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+  <p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+     <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+  <h3>Customer Details</h3>
+  <p><strong>Customer Name:</strong> ${user?.name}</p>
+  <p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+  <p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+  <h3>ITINERARY</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>TOTAL AMOUNT (Including Service Tax)</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+      </tr>
+  
+    </tbody>
+  </table>
+
+  <h3>TRIP DETAILS</h3>
+  <p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+  <h3>Pickup Information</h3>
+  <p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+  <p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+  <h3>TERMS AND CONDITION</h3>
+  <ul style="line-height: 1.6;">
+    <li>Additional charges may apply for extra hours or kilometers.</li>
+    <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+    <li>The vehicle must be returned in clean condition.</li>
+    <li>Any damages to the vehicle during the trip will be charged.</li>
+  </ul>
+
+  <p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+  <p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+  <p><strong>Phone:</strong> +91 9358585237</p>
+  <p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+  <br />
+
+  <p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+  <p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
       `;
       //  problem 
       await sendEmail(email, bookingSubject, bookingMessage);
@@ -1313,88 +1374,102 @@ const addAirpotBooking = async (req, res, next) => {
       // Send booking confirmation email to existing user
       const bookingSubject = `Booking Confirmation ${bookingId} `;
       const bookingMessage = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Dear ${user.name},</p>
-          <p>Your booking has been confirmed. Here are the details:</p>
-          
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="text-align: left; padding: 8px;">Booking Information</th>
-              <th style="text-align: left; padding: 8px;">Details</th>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-            </tr>
-          </table>
-      
-          <br />
-          
-          <p><strong>Terms and Conditions:</strong></p>
-          <ul>
-            <li>Charges for additional hours and kilometers will be billed separately.</li>
-            <li>Full payment for the booking is required before the trip.</li>
-            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-          </ul>
-      
-          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-      
-          <br />
-          
-             
-          <p><strong>Contact Information:</strong></p>
-          <p>Country Code: +${91}</p>
-          <p>Phone Number: ${9358585237}</p>
-          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-      
-          <br />
-          
-          <p>Thank you for booking with us!</p>
-          <p>Best regards,<br>UCS CAB Support Team</p>
-        </div>
-      `;
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+<p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+   <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+<h3>Customer Details</h3>
+<p><strong>Customer Name:</strong> ${user?.name}</p>
+<p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+<p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+<h3>ITINERARY</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>TOTAL AMOUNT (Including Service Tax)</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<h3>TRIP DETAILS</h3>
+<p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+<h3>Pickup Information</h3>
+<p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+<p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+<h3>TERMS AND CONDITION</h3>
+<ul style="line-height: 1.6;">
+  <li>Additional charges may apply for extra hours or kilometers.</li>
+  <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+  <li>The vehicle must be returned in clean condition.</li>
+  <li>Any damages to the vehicle during the trip will be charged.</li>
+</ul>
+
+<p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+<p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+<p><strong>Phone:</strong> +91 9358585237</p>
+<p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+<br />
+
+<p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+<p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
+    `;
       await sendEmail(user.email, bookingSubject, bookingMessage);
 
       // If user exists but is not verified, send OTP email as well
@@ -1455,87 +1530,102 @@ const addAirpotBooking = async (req, res, next) => {
       // Send booking confirmation email to new user
       const bookingSubject = 'Booking Confirmation';
       const bookingMessage = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <p>Dear ${user.name},</p>
-          <p>Your booking has been confirmed. Here are the details:</p>
-          
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <th style="text-align: left; padding: 8px;">Booking Information</th>
-              <th style="text-align: left; padding: 8px;">Details</th>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-              <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-            </tr>
-          </table>
-      
-          <br />
-          
-          <p><strong>Terms and Conditions:</strong></p>
-          <ul>
-            <li>Charges for additional hours and kilometers will be billed separately.</li>
-            <li>Full payment for the booking is required before the trip.</li>
-            <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-            <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-          </ul>
-      
-          <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-      
-          <br />
-          
-          <p><strong>Contact Information:</strong></p>
-          <p>Country Code: +${91}</p>
-          <p>Phone Number: ${9358585237}</p>
-          <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-          <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-      
-          <br />
-          
-          <p>Thank you for booking with us!</p>
-          <p>Best regards,<br>UCS CAB Support Team</p>
-        </div>
-      `;
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+<p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+   <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+<h3>Customer Details</h3>
+<p><strong>Customer Name:</strong> ${user?.name}</p>
+<p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+<p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+<h3>ITINERARY</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+      <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>TOTAL AMOUNT (Including Service Tax)</h3>
+<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+  <thead>
+    <tr>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+      <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+      <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+    </tr>
+
+  </tbody>
+</table>
+
+<h3>TRIP DETAILS</h3>
+<p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+<h3>Pickup Information</h3>
+<p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+<p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+<h3>TERMS AND CONDITION</h3>
+<ul style="line-height: 1.6;">
+  <li>Additional charges may apply for extra hours or kilometers.</li>
+  <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+  <li>The vehicle must be returned in clean condition.</li>
+  <li>Any damages to the vehicle during the trip will be charged.</li>
+</ul>
+
+<p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+<p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+<p><strong>Phone:</strong> +91 9358585237</p>
+<p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+<br />
+
+<p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+<p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
+    `;
       await sendEmail(email, bookingSubject, bookingMessage);
 
       // Send OTP for email verification
@@ -1751,88 +1841,102 @@ const addRoundTripBooking = async (req, res, next) => {
     // Send confirmation email
     const bookingSubject = `Booking Confirmation ${bookingId} `;
     const bookingMessage = `
-      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-        <p>Dear ${user.name},</p>
-        <p>Your booking has been confirmed. Here are the details:</p>
-        
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <th style="text-align: left; padding: 8px;">Booking Information</th>
-            <th style="text-align: left; padding: 8px;">Details</th>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Trip Type</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.tripType}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">From</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.fromLocation}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">To</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.toLocation}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Category</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.category}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Actual Price</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.actualPrice.toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Discount Applied</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.discountValue.toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Total Price</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">$${booking.totalPrice.toFixed(2)}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Date</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingDate.toLocaleDateString()}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Booking Time</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.bookingTime}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Pickup Address</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.pickupAddress}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Drop Address</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${booking.dropAddress}</td>
-          </tr>
-        </table>
-    
-        <br />
-        
-        <p><strong>Terms and Conditions:</strong></p>
-        <ul>
-          <li>Charges for additional hours and kilometers will be billed separately.</li>
-          <li>Full payment for the booking is required before the trip.</li>
-          <li>Cancellation of the trip less than 24 hours before the booking time will incur a 50% charge.</li>
-          <li>The vehicle is expected to be returned in its original condition, or cleaning charges will apply.</li>
-        </ul>
-    
-        <p>We strive to continuously improve our services and value your feedback. If you have any suggestions or concerns, feel free to contact us.</p>
-    
-        <br />
-        
-           
-        <p><strong>Contact Information:</strong></p>
-        <p>Country Code: +${91}</p>
-        <p>Phone Number: ${9358585237}</p>
-        <p>Email: <a href="mailto:"info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
-        <p>Website: <a href="ucscab.com" target="_blank" style="color: #0066cc;">ucscab.com</a></p>
-    
-        <br />
-        
-        <p>Thank you for booking with us!</p>
-        <p>Best regards,<br>UCS CAB Support Team</p>
-      </div>
-    `;
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Dear <strong>${user?.name}</strong>,</p>
+  <p>Thank you for booking with us. Your booking confirmation ID is <strong>${booking?.bookingId}</strong>. For any further reference, please visit our website 
+     <a href="https://www.ucscab.com" style="color: #0066cc;">www.ucscab.com</a> or call us at <strong>+91 95208 01801</strong>.</p>
+
+  <h3>Customer Details</h3>
+  <p><strong>Customer Name:</strong> ${user?.name}</p>
+  <p><strong>Booking ID:</strong> ${booking?.bookingId}</p>
+  <p><strong>Phone Number:</strong> ${user?.phoneNumber}</p>
+
+  <h3>ITINERARY</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Details</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Information</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Drop-off Location</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.dropAddress}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up City</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupCity}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Date</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupDate}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>TOTAL AMOUNT (Including Service Tax)</h3>
+  <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+    <thead>
+      <tr>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: left;">Description</th>
+        <th style="padding: 10px; background-color: #f4f4f4; text-align: right;">Amount (INR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding: 8px; border: 1px solid #ddd;">Booking Amount</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">₹${booking?.totalPrice}</td>
+      </tr>
+  
+    </tbody>
+  </table>
+
+  <h3>TRIP DETAILS</h3>
+  <p><strong>Car Type:</strong> ${booking?.category}</p>
+
+
+  <h3>Pickup Information</h3>
+  <p><strong>Pickup Address:</strong> ${booking?.pickupAddress}</p>
+  <p><strong>Drop-off Address:</strong> ${booking?.dropAddress}</p>
+
+
+  <h3>TERMS AND CONDITION</h3>
+  <ul style="line-height: 1.6;">
+    <li>Additional charges may apply for extra hours or kilometers.</li>
+    <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+    <li>The vehicle must be returned in clean condition.</li>
+    <li>Any damages to the vehicle during the trip will be charged.</li>
+  </ul>
+
+  <p>We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.</p>
+<p>We truly appreciate your business and hope you will choose us again in the future.</p>
+
+
+
+  <p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+  <p><strong>Phone:</strong> +91 9358585237</p>
+  <p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
+
+  <br />
+
+  <p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+  <p>Best regards,<br>UCS Cabs Support Team</p>
+</div>
+
+      `;
     
     await sendEmail(user.email, bookingSubject, bookingMessage);
 
