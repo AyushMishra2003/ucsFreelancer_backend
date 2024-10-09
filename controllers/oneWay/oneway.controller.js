@@ -9,7 +9,8 @@ import CityRate from "../../models/Booking/CityRate.js";
 const addOneWayCategory=async(req,res,next)=>{
     try{
 
-      
+       console.log("one way");
+       
         const {name,numberOfSeats, acAvailable,numberOfBags}=req.body
         
         if(!name || !numberOfBags || !acAvailable || !numberOfSeats){
@@ -28,6 +29,9 @@ const addOneWayCategory=async(req,res,next)=>{
             secure_url:""
            }
         })
+
+        console.log(oneWayCategoryModel);
+        
 
         
 

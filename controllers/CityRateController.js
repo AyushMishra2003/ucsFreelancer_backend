@@ -7,7 +7,13 @@ import AppError from "../utilis/error.utlis.js";
 
 const addRate = async (req, res, next) => {
   try {
-    const { fromCity, toCity, rate, category, extraKm } = req.body;
+    let { fromCity, toCity, rate, category, extraKm } = req.body;
+
+    console.log("Original Category:", category);
+
+    // Normalize spaces and trim
+    category = category.replace(/\s+/g, ' ').trim(); 
+    console.log("Cleaned Category:", category);
 
     // Validate input
     if (!fromCity || !toCity) {
@@ -22,11 +28,31 @@ const addRate = async (req, res, next) => {
       cityRate = await CityRate.create({ fromCity, toCity, rates: [] });
     }
 
-    // If category and rate are provided, add or update the rate
-    if (category && rate) {
-      // Find the category by name
-      const oneWayCategory = await oneWayCategoryModel.findOne({ name: category });
+    // Fetch all categories (optional, depending on your logic)
+    let allCategories = await oneWayCategoryModel.find({});
+    console.log("All Categories:", allCategories);
 
+    // Cleaned category for searching
+    let cleanedCategory = category.replace(/\s+/g, ' ').trim();
+    console.log("Cleaned Category for search:", cleanedCategory);
+
+    // Attempt to find the category using regex first
+    let oneWayCategory = await oneWayCategoryModel.findOne({
+      name: { $regex: new RegExp(`^${cleanedCategory}\\s*$`, 'i') }
+    });
+
+    // Check if the regex search returned a result
+    if (!oneWayCategory) {
+      // If null, fall back to a direct match
+      oneWayCategory = await oneWayCategoryModel.findOne({
+        name: cleanedCategory
+      });
+    }
+
+    console.log("Database Category:", oneWayCategory ? oneWayCategory.name : "Not Found");
+
+    // If category and rate are provided, add or update the rate
+    if (cleanedCategory && rate) {
       if (!oneWayCategory) {
         return next(new AppError("Category not found", 400));
       }
@@ -58,6 +84,7 @@ const addRate = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
+
 
   
 const getRate = async (req, res, next) => {
