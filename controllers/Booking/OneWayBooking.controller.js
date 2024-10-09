@@ -810,7 +810,7 @@ const addLocalTripBooking = async (req, res, next) => {
       <td style="padding: 8px; border: 1px solid #ddd;">Pick-up Time</td>
       <td style="padding: 8px; border: 1px solid #ddd;">${booking?.pickupTime}</td>
     </tr>
-    <tr>
+    -----<tr>
       <td style="padding: 8px; border: 1px solid #ddd;">Booking ID</td>
       <td style="padding: 8px; border: 1px solid #ddd;">${booking?.bookingId}</td>
     </tr>
