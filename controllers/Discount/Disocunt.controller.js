@@ -124,12 +124,12 @@ const getDiscount = async (req, res, next) => {
         // Log the fetched discounts
         console.log(allDiscounts);
 
-        if (allDiscounts.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "No discounts found"
-            });
-        }
+        // if (allDiscounts.length === 0) {
+        //     return res.status(404).json({
+        //         success: false,
+        //         message: "No discounts found"
+        //     });
+        // }
 
         res.status(200).json({
             success: true,
