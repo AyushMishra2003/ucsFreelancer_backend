@@ -10,6 +10,12 @@ const addVendor = async (req, res, next) => {
       return next(new AppError("All Field are Required", 400));
     }
 
+    const validVendor=await VendorModel.find({email})
+    
+    if(!validVendor){
+      return next(new AppError("Email is already registred",400))
+    }
+
     const vendor = await VendorModel.create({
       fullName,
       email,

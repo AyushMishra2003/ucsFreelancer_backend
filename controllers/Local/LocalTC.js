@@ -6,6 +6,9 @@ const addLocalTC = async (req, res, next) => {
   try {
     const { tripType, tC, tcId } = req.body;
 
+    console.log(tripType,tC);
+    
+
     if (!tripType || !tC) {
       return next(new AppError("TripType and Term and Condition are required", 400));
     }
@@ -16,13 +19,20 @@ const addLocalTC = async (req, res, next) => {
     console.log(termCondition);
     
 
+
+    
+
     if (termCondition) {
+      console.log("ayush mishra");
+      
       // Check if the tripType already exists in the data array
       const existingTripType = termCondition.data.find(
         (item) => item.tripType === tripType
       );
 
       if (existingTripType) {
+        console.log(existingTripType);
+        
         if (tcId) {
           // Update existing term and condition if tcId is provided
           const existingTC = existingTripType.tC.find((item) => item._id.toString() === tcId);
@@ -34,7 +44,10 @@ const addLocalTC = async (req, res, next) => {
           }
         } else {
           // If tcId is not provided, add a new term and condition
+
           existingTripType.tC.push({ text: tC });
+          console.log(existingTripType);
+          
         }
       } else {
         // If tripType doesn't exist, add a new entry with tripType and tC array
@@ -43,6 +56,9 @@ const addLocalTC = async (req, res, next) => {
 
       // Save the updated document
       await termCondition.save();
+
+
+      
 
       return res.status(200).json({
         success: true,
@@ -58,6 +74,9 @@ const addLocalTC = async (req, res, next) => {
       });
 
       await newTermCondition.save();
+
+      console.log("add term and condit0");
+      
 
       return res.status(201).json({
         success: true,
@@ -146,8 +165,86 @@ const getSpecificTc = async (req, res, next) => {
   }
 };
 
+const deleteSpecificTc = async (req, res, next) => {
+  try {
+    const { tripType, tcId } = req.body;
+
+    // Check if at least one of the required parameters is provided
+    if (!tripType && !tcId) {
+      return next(new AppError("Either tripType or tcId is required", 400));
+    }
+
+    // Find the document containing terms and conditions
+    const termCondition = await LocalTerm.findOne();
+
+    if (!termCondition) {
+      return next(new AppError("No terms and conditions found", 404));
+    }
+
+    let found = false;
+
+    // Check if tripType is provided, and locate it
+    if (tripType) {
+      const termIndex = termCondition.data.findIndex((item) => item.tripType === tripType);
+
+      if (termIndex === -1) {
+        return next(new AppError(`No terms found for trip type: ${tripType}`, 404));
+      }
+
+      // Check if tcId is also provided to delete a specific term within tripType
+      if (tcId) {
+        const tcList = termCondition.data[termIndex].tC;
+        const tcIndex = tcList.findIndex((tc) => tc._id.toString() === tcId);
+
+        if (tcIndex !== -1) {
+          tcList.splice(tcIndex, 1); // Remove specific term by ID
+          found = true;
+        } else {
+          return next(new AppError(`No term found with ID: ${tcId} under trip type: ${tripType}`, 404));
+        }
+      } else {
+        // If no tcId is provided, delete all terms under this tripType
+        termCondition.data.splice(termIndex, 1);
+        found = true;
+      }
+    } else if (tcId) {
+      // If only tcId is provided, search for it across all trip types
+      termCondition.data.forEach((item) => {
+        const tcIndex = item.tC.findIndex((tc) => tc._id.toString() === tcId);
+
+        if (tcIndex !== -1) {
+          item.tC.splice(tcIndex, 1); // Remove specific term by ID
+          found = true;
+          return; // Exit forEach loop after deleting
+        }
+      });
+
+      if (!found) {
+        return next(new AppError(`No term found with ID: ${tcId}`, 404));
+      }
+    }
+
+    // Save the updated document if any deletion occurred
+    if (found) {
+      await termCondition.save();
+      return res.status(200).json({
+        success: true,
+        message: "Term and condition deleted successfully",
+      });
+    } else {
+      return next(new AppError("No matching terms found to delete", 404));
+    }
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+
+
+
 export {
   addLocalTC,
   getLocalTc,
-  getSpecificTc
+  getSpecificTc,
+  deleteSpecificTc
 };
