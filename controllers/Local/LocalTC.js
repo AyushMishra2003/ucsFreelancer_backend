@@ -240,11 +240,63 @@ const deleteSpecificTc = async (req, res, next) => {
 };
 
 
+const editTC = async (req, res, next) => {
+  try {
+    const { tripType, tcId, tC } = req.body;
+
+    console.log(req.body);
+    
+
+    // Check for required parameters
+    if (!tripType || !tcId || !tC) {
+      return next(new AppError("TripType, Term and Condition ID, and Term and Condition are required", 400));
+    }
+
+    // Find the single existing document
+    let termCondition = await LocalTerm.findOne();
+
+    if (!termCondition) {
+      return next(new AppError("No terms and conditions found", 404));
+    }
+
+    // Find the trip type entry
+    const existingTripType = termCondition.data.find(item => item.tripType === tripType);
+
+    if (!existingTripType) {
+      return next(new AppError(`No terms found for trip type: ${tripType}`, 404));
+    }
+
+    // Find the term condition by ID
+    const existingTC = existingTripType.tC.find(item => item._id.toString() === tcId);
+
+    if (!existingTC) {
+      return next(new AppError(`No term found with ID: ${tcId}`, 404));
+    }
+
+    // Update the term condition text
+    existingTC.text = tC;
+
+    // Save the updated document
+    await termCondition.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Term and condition with ID: ${tcId} updated for trip type: ${tripType}`,
+      data: termCondition,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+
+
 
 
 export {
   addLocalTC,
   getLocalTc,
   getSpecificTc,
-  deleteSpecificTc
+  deleteSpecificTc,
+  editTC
 };

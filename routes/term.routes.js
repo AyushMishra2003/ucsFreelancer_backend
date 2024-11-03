@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addLocalTC, deleteSpecificTc, getLocalTc, getSpecificTc } from "../controllers/Local/LocalTC.js";
+import { addLocalTC, deleteSpecificTc, editTC, getLocalTc, getSpecificTc } from "../controllers/Local/LocalTC.js";
 
 
 
@@ -11,5 +11,6 @@ termRoute.post("/",addLocalTC)
 termRoute.get("/",getLocalTc)
 termRoute.post("/trip",getSpecificTc)
 termRoute.post("/delete",deleteSpecificTc)
+termRoute.post("/update",editTC)
 
 export default termRoute
