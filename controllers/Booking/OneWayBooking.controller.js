@@ -2056,6 +2056,8 @@ const verifyOneWayBooking = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
+
+
 const getOneWayBooking=async(req,res,next)=>{
     try{
           const {fromLocation,toLocation}=req.body
@@ -2080,6 +2082,9 @@ const getOneWayBooking=async(req,res,next)=>{
         return next(new AppError(error.message,500))
     }
 }
+
+
+
 const cancelOneWayBooking = async (req, res, next) => { 
   try{
     
@@ -2132,6 +2137,8 @@ const cancelOneWayBooking = async (req, res, next) => {
 
 
 };
+
+
 const approveBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -2287,12 +2294,14 @@ const approveBooking = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
+
+
 const getAllBooking = async (req, res, next) => {
   try {
       // Fetch all bookings that are not canceled and have status true
       const bookings = await Booking.find().populate('userId', 'name email phoneNumber'); // Adjust fields as needed
 
-      console.log(bookings);
+      // console.log(bookings);
       
 
       if (bookings.length === 0) {
@@ -2336,18 +2345,23 @@ const getSingleBooking=async(req,res,next)=>{
 const bookComplete = async (req, res, next) => {
   try {
     const { id } = req.params;
-    let { extraRates } = req.body;
+    let { extraRates ,extraHours,description} = req.body;
+
+    console.log(extraRates,extraHours,description);
+    
 
     if (!extraRates) {
       extraRates = 0;
     }
 
-    // Admin authorization
-    console.log(id);
+    if(!extraHours){
+      extraHours=0;
+    }
+
     
     const validBooking = await Booking.findById(id);
 
-    console.log(validBooking);
+    // console.log(validBooking);
     
 
     if (!validBooking) {
@@ -2382,18 +2396,38 @@ const bookComplete = async (req, res, next) => {
     if (validBooking.status === "ongoing") {
       validBooking.status = "complete";
       const extraPrice = extraRates * 10;
-      const totalPrice = validBooking.totalPrice + extraPrice;
+      const extraHourRate=extraHours*10;
+      console.log(extraPrice,extraHourRate);
 
-      validBooking.extraKm = extraRates;
+      console.log(validBooking);
+      
+      
+      const totalPrice = validBooking?.totalPrice + extraPrice+extraHourRate;
+
+      console.log(totalPrice);
+      
+      
+      validBooking.extraKm = extraPrice;
+      validBooking.extraHour=extraHourRate
+      validBooking.extraPerKm=extraRates
+      validBooking.extraPerHour=extraHours
       validBooking.extraPrice = extraPrice;
       validBooking.totalPrice = totalPrice;
 
+
+
+      if(description){
+        validBooking.description=description
+      }
+
       await validBooking.save();
+      console.log(validBooking);
+      
     } else {
       return next(new AppError("Booking is Yet Not Ongoing", 400));
     }
 
-    const subject = 'Your Driver Details Have Been Updated';
+    const subject = 'Your Booking  Has Been Complete';
     const text = `Dear Customer,
     Your Booking is completed.
 

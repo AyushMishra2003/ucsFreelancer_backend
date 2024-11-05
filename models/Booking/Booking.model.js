@@ -79,9 +79,15 @@ const BookingSchema = new Schema({
   },
   extraPerKm:{
     type:Number,
+    default: 0,
   },
   extraPerHour:{
-    type:Number
+    type:Number,
+    default: 0,
+  },
+  extraHour:{
+     type:Number,
+     default: 0,
   },
   distance:{
     type:String
@@ -104,6 +110,9 @@ const BookingSchema = new Schema({
   },
   returnDate:{
     type:Date
+  },
+  description:{
+      type:String
   },
   driverDetails: [{
     name: { type: String },
