@@ -203,7 +203,7 @@ const getAirpotCity = async (req, res, next) => {
     const aggregatedRates = matchedCity.rates.reduce((acc, rate) => {
       const categoryId = rate.category._id.toString();
       const existingCategory = acc.find(cat => cat._id.toString() === categoryId);
-      
+    
       if (existingCategory) {
         existingCategory.rates.push({
           kilometer: rate.kilometer,
@@ -222,7 +222,12 @@ const getAirpotCity = async (req, res, next) => {
       }
       return acc;
     }, []);
-
+    
+    // Now, sort only the 'rates' within each category by 'rate' in ascending order
+    aggregatedRates.forEach(category => {
+      category.rates.sort((a, b) => a.rate - b.rate);  // Sorting by 'rate'
+    });
+    
     // Respond with the matched city and aggregated rate categories
     res.status(200).json({
       success: true,
@@ -235,6 +240,7 @@ const getAirpotCity = async (req, res, next) => {
         updatedAt: matchedCity.updatedAt,
       },
     });
+    
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
@@ -354,6 +360,14 @@ const getAllAirpotCities = async (req, res, next) => {
       path: 'rates.category',
       model: 'UCS_Airpot_Category',
     });
+
+    allCities.forEach(cityRate => {
+      // Ensure rates array exists and sort it by 'rate'
+      if (cityRate.rates && Array.isArray(cityRate.rates)) {
+        cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
+      }
+    });
+
 
     // If no cities are found, return an empty list
     if (!allCities || allCities.length === 0) {
