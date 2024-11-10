@@ -135,6 +135,9 @@ const getByLocation = async (req, res, next) => {
       return next(new AppError("Cities Are Required", 400));
     }
 
+    console.log(req.body);
+    
+
     // Fetch rates based on fromCity and toCity, and populate the category field
     const cityRate = await CityRate.findOne({ fromCity, toCity })
       .populate({
@@ -143,12 +146,12 @@ const getByLocation = async (req, res, next) => {
         select: 'name photo numberOfSeats acAvailable numberOfBags' // Fields to include
       });
 
-    cityRate.forEach(cityRate => {
-        // Ensure rates array exists and sort it by 'rate'
-        if (cityRate.rates && Array.isArray(cityRate.rates)) {
-          cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
-        }
-      });
+// Ensure the rates array exists and sort it by 'rate' in ascending order
+if (cityRate && cityRate.rates && Array.isArray(cityRate.rates)) {
+  cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
+}
+
+console.log(cityRate); // Log the sorted cityRate to verify the result
   
 
       console.log(cityRate);
