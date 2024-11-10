@@ -222,7 +222,9 @@ const getAirpotCity = async (req, res, next) => {
       }
       return acc;
     }, []);
-
+    
+    console.log("aggaggregated rates",aggregatedRates);
+    
     // Respond with the matched city and aggregated rate categories
     res.status(200).json({
       success: true,
@@ -392,10 +394,10 @@ const getAllAirpotCities = async (req, res, next) => {
         return acc;
       }, []);
 
-      // Sort the rates for each category in ascending order based on rate
-      aggregatedRates.forEach(category => {
-        category.rates.sort((a, b) => a.rate - b.rate);  // Ascending order based on 'rate'
-      });
+      console.log("ayus is ",aggregatedRates);
+      console.log(cityData);
+      
+      
 
       return {
         _id: city._id,
@@ -417,7 +419,6 @@ const getAllAirpotCities = async (req, res, next) => {
     return next(new AppError(error.message, 500));
   }
 };
-
 
   
 const getByAirpotCategory=async(req,res,next)=>{

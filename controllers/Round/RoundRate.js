@@ -104,8 +104,16 @@ const getRoundCity=async(req,res,next)=>{
               path: 'rates.category', // Populate the category field within rates
             model: 'UCS_Round_Category' // Make sure this matches your category model
         });
+        if (allCity && allCity.rates) {
+            // Sorting the rates array by 'perKm' in ascending order
+            allCity.rates.sort((a, b) => a.perKm - b.perKm); // For ascending order
+        
+            // If you want descending order, you can do:
+            // allCity.rates.sort((a, b) => b.perKm - a.perKm);
+        }
+        
+        console.log(allCity); // Now allCity has sorted rates
 
-   console.log(allCity);
         
 
     if(!allCity){
