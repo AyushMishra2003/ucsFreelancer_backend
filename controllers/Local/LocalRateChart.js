@@ -66,6 +66,16 @@ const getRate = async (req, res, next) => {
             return next(new AppError("Rate Not Found", 400));
         }
 
+        console.log("all city rate is",allCityRate);
+
+        allCityRate.forEach(cityRate => {
+            // Ensure rates array exists and sort it by 'perKm'
+            if (cityRate.rates && Array.isArray(cityRate.rates)) {
+              cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'perKm' in ascending order
+            }
+          });
+          
+
         res.status(200).json({
             success: true,
             message: "All City Rates",
@@ -93,6 +103,10 @@ const getByLocation = async (req, res, next) => {
                 path: 'rates.category', // Populate the category field within rates
                 model: 'UCS_Local_Category' // Make sure this matches your category model
             });
+
+            if (cityRate && cityRate.rates && Array.isArray(cityRate.rates)) {
+                cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
+              }     
 
         if (!cityRate) {
             return next(new AppError("City Rate Not Found", 404));
