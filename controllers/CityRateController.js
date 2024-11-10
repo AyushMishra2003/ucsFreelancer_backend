@@ -95,9 +95,21 @@ const getRate = async (req, res, next) => {
         path: 'rates.category', // Path to the field to populate
         model: 'UCS_OneWay_Category', // The model to use for population
         select: 'name photo numberOfSeats acAvailable numberOfBags' // Select fields to include
-      });
+      })
+    
 
-      console.log(allCityRates);
+    console.log("ka ho e ho ka ho aaa");
+    allCityRates.forEach(cityRate => {
+      // Ensure rates array exists and sort it by 'rate'
+      if (cityRate.rates && Array.isArray(cityRate.rates)) {
+        cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
+      }
+    });
+
+
+    console.log(allCityRates);
+    
+    
       
 
     if (!allCityRates || allCityRates.length === 0) {
@@ -130,6 +142,14 @@ const getByLocation = async (req, res, next) => {
         model: 'UCS_OneWay_Category', // Model to use for population
         select: 'name photo numberOfSeats acAvailable numberOfBags' // Fields to include
       });
+
+    cityRate.forEach(cityRate => {
+        // Ensure rates array exists and sort it by 'rate'
+        if (cityRate.rates && Array.isArray(cityRate.rates)) {
+          cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
+        }
+      });
+  
 
       console.log(cityRate);
       

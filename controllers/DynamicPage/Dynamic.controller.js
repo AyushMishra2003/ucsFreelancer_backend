@@ -4,6 +4,8 @@ import AppError from "../../utilis/error.utlis.js";
 import cloudinary from "cloudinary";
 import fs from "fs";
 import path from "path";
+
+
 // Controller to create a new page
 const createPage = async (req, res) => {
   const { name } = req.body;
@@ -227,13 +229,23 @@ const addChildrenToSection = async (req, res, next) => {
 
 // Function to update an existing child in a section
 const updateChildInSection = async (req, res, next) => {
-  console.log("Update child method called");
+
   const { id } = req.params; // Section ID
-  const { childId, title, description } = req.body; // Include childId to identify the child
+
+  const { childId,title, description,oldTitle } = req.body; // Include childId to identify the child
+
+
+  console.log(oldTitle);
+  console.log(title);
+  
+  
 
   try {
     // Fetch the section by ID
     const section = await SectionModel.findById(id);
+
+    console.log(section);
+    
 
     if (!section) {
       return res.status(404).json({
@@ -243,7 +255,7 @@ const updateChildInSection = async (req, res, next) => {
     }
 
     // Find the child by its ID
-    const child = section.children.find((child) => child.title === title);
+    const child = section.children.find((child) => child.title === oldTitle);
 
     if (!child) {
       return res.status(404).json({

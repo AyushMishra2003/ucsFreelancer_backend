@@ -32,7 +32,6 @@ const SectionSchema = new Schema(
     },
     description: {
       type: String,
-      required: true,
     },
     photo: {
       public_id: {
