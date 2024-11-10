@@ -71,7 +71,7 @@ const getRate = async (req, res, next) => {
         allCityRate.forEach(cityRate => {
             // Ensure rates array exists and sort it by 'perKm'
             if (cityRate.rates && Array.isArray(cityRate.rates)) {
-              cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'perKm' in ascending order
+              cityRate.rates.sort((a, b) =>a.rateFor80Km8Hours - b.rateFor80Km8Hours); // Sorting by 'perKm' in ascending order
             }
           });
           
@@ -105,7 +105,7 @@ const getByLocation = async (req, res, next) => {
             });
 
             if (cityRate && cityRate.rates && Array.isArray(cityRate.rates)) {
-                cityRate.rates.sort((a, b) => a.rate - b.rate); // Sorting by 'rate' in ascending order
+                cityRate.rates.sort((a, b) => a.rateFor80Km8Hours - b.rateFor80Km8Hours); // Sorting by 'rate' in ascending order
               }     
 
         if (!cityRate) {
