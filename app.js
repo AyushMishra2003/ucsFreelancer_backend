@@ -28,6 +28,7 @@ import strucutreRoute from "./routes/pages/strucure.route.js";
 import dynamicRoute from "./routes/DynamicPage/dynamicpage.route.js";
 import inquiryRoute from "./routes/Inquiry/Inquiry.route.js";
 import vendorRoute from "./routes/vendor/vendor.route.js";
+import PackageRouter from "./routes/package/package.route.js";
 // Load environment variables
 config();
 
@@ -77,6 +78,11 @@ app.get("/api/v1/invoice/:id", generateInvoice);
 app.use("/api/v1/dynamic", dynamicRoute);
 app.use("/api/v1/inquiry", inquiryRoute);
 app.use("/api/v1/vendor", vendorRoute);
+
+
+
+app.use("/api/v1/package",PackageRouter)
+
 
 // Default route
 app.get("/", (req, res) => {

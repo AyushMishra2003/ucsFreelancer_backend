@@ -137,7 +137,13 @@ const updateLocalRate = async (req, res, next) => {
     try {
         console.log("Request body:", req.body);
 
-        const { cityName, category, perKm, perHour, rateFor80Km8Hours, rateFor100Km8Hours } = req.body;
+        const { cityName, category, perKm, perHour, rateFor80Km8Hours, rateFor120Km12Hours
+        } = req.body;
+
+        console.log("req.body is",req.body);
+        console.log("i am runing");
+        
+        
 
         // Validate that cityName and category are provided
         if (!cityName || !category) {
@@ -173,7 +179,7 @@ const updateLocalRate = async (req, res, next) => {
         if (perKm) cityRate.rates[rateIndex].perKm = perKm;
         if (perHour) cityRate.rates[rateIndex].perHour = perHour;
         if (rateFor80Km8Hours) cityRate.rates[rateIndex].rateFor80Km8Hours = rateFor80Km8Hours;
-        if (rateFor100Km8Hours) cityRate.rates[rateIndex].rateFor100Km8Hours = rateFor100Km8Hours;
+        if (rateFor120Km12Hours) cityRate.rates[rateIndex].rateFor120Km12Hours =rateFor120Km12Hours;
 
         // Save the updated city rate document
         await cityRate.save();
