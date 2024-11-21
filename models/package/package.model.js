@@ -32,6 +32,9 @@ const PackageSchema = new Schema(
       type: [String], // Array of strings to store options like 'hotelIncluded', 'mealIncluded', 'dummyOption'
       default: [], // Default empty array
     },
+    location:{
+      type:String
+    }
   },
   {
     timestamps: true, // Adds createdAt and updatedAt fields

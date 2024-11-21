@@ -20,7 +20,8 @@ const addPackage = async (req, res) => {
       termsAndCondition,
       packageName,
       dayWise, 
-      includedPackages
+      includedPackages,
+      location
     //   dayWise,
     } = req.body;
 
@@ -49,6 +50,7 @@ const addPackage = async (req, res) => {
         public_id:"",
         secure_url:""
       },
+      location,
       photos: [], // Initialize photos as an empty array
     //   dayWise, // Directly use the array from the frontend,
     dayWise: formattedDayWise, // Use the transformed dayWise,
