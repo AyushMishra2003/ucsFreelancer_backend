@@ -5,14 +5,17 @@ import upload from "../../middleware/multer.middlware.js";
 const PackageRouter=Router()
 
 PackageRouter.post("/", upload.fields([
-    { name: 'mainPhoto', maxCount: 1 },  // Expect one file for mainPhoto
-    { name: 'photos', maxCount: 10 }     // Expect up to 10 files for photos
+    { name: 'mainPhoto', maxCount: 1 }, 
+    { name: 'photos', maxCount: 10 }    
   ]), addPackage)
 PackageRouter.get("/",getAllPackages)
 PackageRouter.get("/include",getPackageInclude)
 PackageRouter.get("/category",getPackageCategory)
 PackageRouter.get("/:id",getParticularPackage)
-PackageRouter.put("/:id",editPackage)
+PackageRouter.put("/:id", upload.fields([
+  { name: 'mainPhoto', maxCount: 1 }, 
+  { name: 'photos', maxCount: 10 }    
+]),editPackage)
 PackageRouter.delete("/:id",deletePackage)
 
 PackageRouter.post("/include",addPackageInclude)

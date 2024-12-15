@@ -2,7 +2,6 @@
 import fs from "fs";
 import cloudinary from "cloudinary";
 
-
 import AppError from "../../utilis/error.utlis.js";
 import PackageModel from "../../models/package/package.model.js";
 import PackageIncludeModel from "../../models/package/Includes.model.js";
@@ -22,22 +21,51 @@ const addPackage = async (req, res) => {
       bookingPolicy,
       termsAndCondition,
       packageName,
-      dayWise, 
+      dayWise,
       includedPackages,
-      location
-    //   dayWise,
+      location,
+      categories,
     } = req.body;
 
-    console.log(req.body);
 
-    const formattedDayWise = dayWise.map((item, index) => ({
-      day: `Day ${index + 1}`, // Format as "Day 1", "Day 2", etc.
-      description: item.content, // Keep only the content
-    }));
 
-    const includedDetailsArray = JSON.parse(includedPackages);
+    // Validate and format `dayWise`
+    const formattedDayWise = Array.isArray(dayWise)
+      ? dayWise.map((item, index) => ({
+          day: `Day ${index + 1}`, // Format as "Day 1", "Day 2", etc.
+          description: item.content, // Keep only the content
+        }))
+      : [];
+
+    // Validate and parse `includedPackages`
+    let includedDetailsArray = [];
+    if (includedPackages) {
+      try {
+        includedDetailsArray = JSON.parse(includedPackages);
+      } catch (parseError) {
+        console.error('Error parsing includedPackages:', parseError.message);
+        throw new Error('Invalid includedPackages format. Must be valid JSON.');
+      }
+    }
+
+    // Validate and parse `categories`
+    let categoriesDetails = [];
+
+    console.log("catogory is",categories);
+    
+    if (categories) {
+      try {
+        categoriesDetails = JSON.parse(categories);
+      } catch (parseError) {
+        console.error('Error parsing categories:', parseError.message);
+        throw new Error('Invalid categories format. Must be valid JSON.');
+      }
+    }
+
+    console.log("categirt details is",categoriesDetails);
     
 
+    // Create new package object
     const newPackage = new PackageModel({
       packageName,
       dateFrom,
@@ -49,107 +77,107 @@ const addPackage = async (req, res) => {
       exclusive,
       bookingPolicy,
       termsAndCondition,
-      mainPhoto:{
-        public_id:"",
-        secure_url:""
+      mainPhoto: {
+        public_id: "",
+        secure_url: "",
       },
+      categoriesDetails:categoriesDetails,
       location,
-      photos: [], // Initialize photos as an empty array
-    //   dayWise, // Directly use the array from the frontend,
-    dayWise: formattedDayWise, // Use the transformed dayWise,
-    includedDetails:includedDetailsArray
+      photos: [],
+      dayWise: formattedDayWise,
+      includedDetails:includedDetailsArray,
     });
 
-
-    console.log(req.file);
-
-
-
+    console.log("new package is",newPackage);
     
 
- // Handle the mainPhoto upload (single file)
- if (req.files && req.files.mainPhoto) {
-  const result = await cloudinary.v2.uploader.upload(req.files.mainPhoto[0].path, {
-    folder: 'lms', // Cloudinary folder for the main photo
-  });
 
-  newPackage.mainPhoto = {
-    public_id: result.public_id,
-    secure_url: result.secure_url,
-  };
-  fs.unlinkSync(req.files.mainPhoto[0].path); // Remove the file from local storage after upload
-}
+    // Handle the mainPhoto upload (single file)
+    if (req.files && req.files.mainPhoto && req.files.mainPhoto.length > 0) {
+      const result = await cloudinary.v2.uploader.upload(req.files.mainPhoto[0].path, {
+        folder: 'lms', // Cloudinary folder for the main photo
+      });
 
-// Handle multiple photos upload (photos array)
-if (req.files && req.files.photos) {
-  for (const photo of req.files.photos) {
-    const photoResult = await cloudinary.v2.uploader.upload(photo.path, {
-      folder: 'packages/photos', // Cloudinary folder for the additional photos
-    });
+      newPackage.mainPhoto = {
+        public_id: result.public_id,
+        secure_url: result.secure_url,
+      };
+      fs.unlinkSync(req.files.mainPhoto[0].path); // Remove the file from local storage after upload
+    }
 
-    newPackage.photos.push({
-      public_id: photoResult.public_id,
-      secure_url: photoResult.secure_url,
-    });
-    fs.unlinkSync(photo.path); // Remove the file after uploading
-  }
-}
+    // Handle multiple photos upload (photos array)
+    if (req.files && req.files.photos && req.files.photos.length > 0) {
+      for (const photo of req.files.photos) {
+        const photoResult = await cloudinary.v2.uploader.upload(photo.path, {
+          folder: 'packages/photos', // Cloudinary folder for the additional photos
+        });
 
+        newPackage.photos.push({
+          public_id: photoResult.public_id,
+          secure_url: photoResult.secure_url,
+        });
+        fs.unlinkSync(photo.path); // Remove the file after uploading
+      }
+    }
+
+    // Save the package to the database
     await newPackage.save();
-    res.status(201).json({ message: "Package added successfully", package: newPackage });
+    res.status(201).json({ message: 'Package added successfully', package: newPackage });
   } catch (error) {
-    console.log(error);
-    
-    res.status(500).json({ message: "Error adding package", error: error.message });
+    console.error('Error adding package:', error); // Log detailed error
+    res.status(500).json({ message: 'Error adding package', error: error.message });
   }
 };
 
 // Edit a package
 const editPackage = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updatedData = { ...req.body };
+    const { id } = req.params; // Get package ID from URL params
+    const updateData = { ...req.body };
 
-    // Handle dayWise array
-    if (updatedData.dayWise) {
-      updatedData.dayWise = JSON.parse(updatedData.dayWise); // Convert JSON string to array if needed
-    }
+    // Handle mainPhoto
+    if (req.files.mainPhoto && req.files.mainPhoto[0]) {
+      // Upload the mainPhoto to Cloudinary
+      const mainPhotoUpload = await cloudinary.uploader.upload(
+        req.files.mainPhoto[0].path, // Local path of the uploaded file
+        { folder: 'packages/mainPhoto' } // Optional folder in Cloudinary
+      );
 
-    // Handle main photo update
-    if (req.files && req.files.mainPhoto) {
-      const mainPhotoResult = await cloudinary.v2.uploader.upload(req.files.mainPhoto[0].path, {
-        folder: "packages",
-      });
-      updatedData.mainPhoto = {
-        public_id: mainPhotoResult.public_id,
-        secure_url: mainPhotoResult.secure_url,
+      updateData.mainPhoto = {
+        public_id: mainPhotoUpload.public_id,
+        secure_url: mainPhotoUpload.secure_url,
       };
-      fs.unlinkSync(req.files.mainPhoto[0].path); // Remove local file
     }
 
-    // Handle multiple photos update
-    if (req.files && req.files.photos) {
-      updatedData.photos = []; // Reset the photos array
-      for (const photo of req.files.photos) {
-        const photoResult = await cloudinary.v2.uploader.upload(photo.path, {
-          folder: "packages/photos",
-        });
-        updatedData.photos.push({
-          public_id: photoResult.public_id,
-          secure_url: photoResult.secure_url,
-        });
-        fs.unlinkSync(photo.path); // Remove local file
-      }
+    // Handle photos (array of objects)
+    if (req.files.photos && req.files.photos.length > 0) {
+      const photosUploads = await Promise.all(
+        req.files.photos.map((file) =>
+          cloudinary.uploader.upload(file.path, { folder: 'packages/photos' })
+        )
+      );
+
+      updateData.photos = photosUploads.map((upload) => ({
+        public_id: upload.public_id,
+        secure_url: upload.secure_url,
+      }));
     }
 
-    const updatedPackage = await PackageModel.findByIdAndUpdate(id, updatedData, { new: true });
-    if (!updatedPackage) return res.status(404).json({ message: "Package not found" });
+    // Update the package in MongoDB
+    const updatedPackage = await PackageModel.findByIdAndUpdate(id, updateData, {
+      new: true, // Return the updated document
+      runValidators: true, // Run schema validators during the update
+    });
 
-    res.status(200).json({ message: "Package updated successfully", package: updatedPackage });
+    res.status(200).json(updatedPackage); // Send the updated package in the response
   } catch (error) {
-    res.status(500).json({ message: "Error updating package", error: error.message });
+    console.error('Error updating package:', error); // Log the error for debugging
+    res.status(500).json({ error: error.message }); // Return error response
   }
 };
+
+
+
 
 // Get all packages
  const getAllPackages = async (req, res,next) => {
@@ -278,6 +306,10 @@ const editPackageInclude = async (req, res, next) => {
     const { id } = req.params; // ID of the include to edit
     const { includeName } = req.body; // Updated data
 
+
+    console.log("include name is",includeName);
+    
+
     // Find and update the include
     const updatedInclude = await PackageIncludeModel.findByIdAndUpdate(
       id, 
@@ -305,13 +337,18 @@ const deletePackageInclude = async (req, res, next) => {
   try {
     const { id } = req.params; // ID of the include to delete
 
+    console.log(id);
+    
+
     // Find and delete the include
-    const deletedInclude = await PackageIncludeModel.findByIdAndDelete(id);
+    const deletedInclude = await PackageIncludeModel.findById(id)
 
     // Check if the include exists
     if (!deletedInclude) {
       return next(new AppError("Package Include not found", 404));
     }
+
+    await PackageIncludeModel.findByIdAndDelete(id)
 
     res.status(200).json({
       success: true,

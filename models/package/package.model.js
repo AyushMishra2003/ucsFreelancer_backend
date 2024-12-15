@@ -32,7 +32,15 @@ const PackageSchema = new Schema(
       type: [String], // Array of strings to store options like 'hotelIncluded', 'mealIncluded', 'dummyOption'
       default: [], // Default empty array
     },
+    categoriesDetails:{
+       type:[String],
+       default:[]
+    },
+    
     location:{
+      type:String
+    },
+    category:{
       type:String
     }
   },
