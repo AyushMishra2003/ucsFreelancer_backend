@@ -36,6 +36,10 @@ const PackageSchema = new Schema(
        type:[String],
        default:[]
     },
+    packageTagDetail:{
+      type:[String],
+      default:[]
+    },
     
     location:{
       type:String

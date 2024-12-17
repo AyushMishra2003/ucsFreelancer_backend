@@ -9,6 +9,16 @@ const PackageIncludeSchema=new Schema(
             require:true,
             unique:true
          },
+         includePhoto:{
+            public_id: {
+                type: String,
+                default:"",
+              },
+              secure_url: {
+                type: String,
+                default:""
+              },
+        }
     },
     {
         timestamps:true

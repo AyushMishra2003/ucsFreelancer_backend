@@ -29,6 +29,7 @@ import dynamicRoute from "./routes/DynamicPage/dynamicpage.route.js";
 import inquiryRoute from "./routes/Inquiry/Inquiry.route.js";
 import vendorRoute from "./routes/vendor/vendor.route.js";
 import PackageRouter from "./routes/package/package.route.js";
+import query from "./routes/package/packgequery.routes.js";
 // Load environment variables
 config();
 
@@ -84,6 +85,8 @@ app.use("/api/v1/vendor", vendorRoute);
 
 
 app.use("/api/v1/package",PackageRouter)
+app.use("/api/v1/query",query)
+
 
 
 // Default route

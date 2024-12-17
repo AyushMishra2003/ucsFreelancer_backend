@@ -6,6 +6,8 @@ import AppError from "../../utilis/error.utlis.js";
 import PackageModel from "../../models/package/package.model.js";
 import PackageIncludeModel from "../../models/package/Includes.model.js";
 import PackageCategoryModel from "../../models/package/PackageCategory.js";
+import PackageTagModel from "../../models/package/packageTag.model.js";
+import PackageQuery from "../../models/package/packegQuery.model.js";
 
 // Add a new package
 const addPackage = async (req, res) => {
@@ -25,6 +27,7 @@ const addPackage = async (req, res) => {
       includedPackages,
       location,
       categories,
+      packageTag
     } = req.body;
 
 
@@ -63,6 +66,18 @@ const addPackage = async (req, res) => {
     }
 
     console.log("categirt details is",categoriesDetails);
+
+
+    let packageDetail=[]
+
+    if (packageTag) {
+      try {
+        packageDetail = JSON.parse(packageTag);
+      } catch (parseError) {
+        console.error('Error parsing categories:', parseError.message);
+        throw new Error('Invalid categories format. Must be valid JSON.');
+      }
+    }
     
 
     // Create new package object
@@ -86,6 +101,7 @@ const addPackage = async (req, res) => {
       photos: [],
       dayWise: formattedDayWise,
       includedDetails:includedDetailsArray,
+      packageTagDetail:packageDetail
     });
 
     console.log("new package is",newPackage);
@@ -176,9 +192,6 @@ const editPackage = async (req, res) => {
   }
 };
 
-
-
-
 // Get all packages
  const getAllPackages = async (req, res,next) => {
   try {
@@ -250,13 +263,29 @@ const addPackageInclude=async(req,res,next)=>{
      
 
     const includePackage=new PackageIncludeModel({
-       includeName
+       includeName,
+       includePhoto:{
+          public_id:"",
+          secure_url:""
+       }
     })
 
-    const all=await PackageIncludeModel.find({})
-
-    console.log(all);
-    
+      // Handle the mainPhoto upload (single file)
+      if (req.file) {
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+            folder: "lms",
+        });
+        if (result) {
+             includePackage.includePhoto = {
+                public_id: result.public_id,
+                secure_url: result.secure_url
+            };
+            await includePackage.save(); 
+        }
+  
+        // Remove the file using fs.unlinkSync
+        fs.unlinkSync(req.file.path); // Ensure correct file removal
+        }
 
     if(!includePackage){
       return next(new AppError("Included Not Added",400))
@@ -306,16 +335,33 @@ const editPackageInclude = async (req, res, next) => {
     const { id } = req.params; // ID of the include to edit
     const { includeName } = req.body; // Updated data
 
-
-    console.log("include name is",includeName);
-    
-
-    // Find and update the include
+      // Find and update the include
     const updatedInclude = await PackageIncludeModel.findByIdAndUpdate(
       id, 
       { includeName }, 
       { new: true, runValidators: true }
     );
+    console.log("updated iclude",updatedInclude);
+    
+
+          // Handle the mainPhoto upload (single file)
+    if (req.file) {
+        const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                folder: "lms",
+        });
+        if (result) {
+                updatedInclude.includePhoto = {
+                  public_id: result.public_id,
+                  secure_url: result.secure_url
+                };
+                await updatedInclude.save(); 
+            }
+      
+            // Remove the file using fs.unlinkSync
+            fs.unlinkSync(req.file.path); // Ensure correct file removal
+            }
+    
+    
 
     // Check if the include exists
     if (!updatedInclude) {
@@ -403,7 +449,7 @@ const addPackageCategory=async(req,res,next)=>{
 
       // Remove the file using fs.unlinkSync
       fs.unlinkSync(req.file.path); // Ensure correct file removal
-  }
+      }
 
   await packageCategoryName.save()
 
@@ -520,6 +566,245 @@ const deletePackageCategory = async (req, res, next) => {
 };
 
 
+// packageTag
+
+const addPackageTag=async(req,res,next)=>{
+  try{
+
+    const {tagName}=req.body
+    
+    if(!tagName){
+      return next(new AppError("All field are Required",400))
+    }
+
+    const addTag=new PackageTagModel({
+       tagName
+    })
+
+    if(!addTag){
+       return next(new AppError("Tag Not Added",400))
+    }
+
+    await addTag.save()
+
+    res.status(200).json({
+      success:true,
+      message:"Tag Added Succesfully",
+      data:addTag
+    })
+
+  }catch(error){
+    return next(new AppError(error?.message,500))
+  }
+}
+
+const getPackageTag=async(req,res,next)=>{
+   try{
+     
+    const allTag=await PackageTagModel.find({})
+
+    if(!allTag){
+      return next(new AppError("Tag Not Found",500))
+    }
+
+    res.status(200).json({
+      success:true,
+      message:"ALL Tag Are:-",
+      data:allTag
+    })
+
+   }catch(error){
+    return next(new AppError(error.message,500))
+   }
+}
+
+const editPackageTag = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Assuming tag ID is passed as a URL parameter
+    const { tagName } = req.body;
+
+    // Validate input
+    if (!id || !tagName) {
+      return next(new AppError("Tag ID and tagName are required", 400));
+    }
+
+    // Find and update the tag
+    const updatedTag = await PackageTagModel.findByIdAndUpdate(
+      id,
+      { tagName },
+      { new: true, runValidators: true } // Return updated document and validate input
+    );
+
+    if (!updatedTag) {
+      return next(new AppError("Tag not found or not updated", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Tag updated successfully",
+      data: updatedTag,
+    });
+  } catch (error) {
+    return next(new AppError(error?.message || "Error updating tag", 500));
+  }
+};
+
+
+const deletePackageTag = async (req, res, next) => {
+  try {
+    const { id } = req.params; // Assuming tag ID is passed as a URL parameter
+
+    console.log(id);
+    
+
+    // Validate input
+    if (!id) {
+      return next(new AppError("Tag ID is required", 400));
+    }
+
+    // Find and delete the tag
+    const deletedTag = await PackageTagModel.findByIdAndDelete(id);
+
+    if (!deletedTag) {
+      return next(new AppError("Tag not found or already deleted", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Tag deleted successfully",
+      data: deletedTag,
+    });
+  } catch (error) {
+    return next(new AppError(error?.message || "Error deleting tag", 500));
+  }
+};
+
+
+
+// query  
+
+
+const addPackageQuery = async (req, res, next) => {
+  try {
+    const { destination, name, mobile, email, adults, children, infants, query } = req.body;
+
+    console.log(req.body);
+    
+
+    // Create a new query instance
+    const newPackageQuery = new PackageQuery({
+      destination,
+      name,
+      mobile,
+      email,
+      adults,
+      children,
+      infants,
+      query,
+    });
+  
+    
+
+    // Save to the database
+    await newPackageQuery.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Package query added successfully!",
+      data: newPackageQuery,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+// Controller to get all PackageQueries
+ const getAllPackageQueries = async (req, res, next) => {
+  try {
+    const queries = await PackageQuery.find(); // Fetch all queries
+
+    res.status(200).json({
+      success: true,
+      message: "Package queries fetched successfully!",
+      data: queries,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+// Controller to get a single PackageQuery by ID
+ const getPackageQueryById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const query = await PackageQuery.findById(id);
+
+    if (!query) {
+      return next(new AppError("Package query not found!", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Package query fetched successfully!",
+      data: query,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+// Controller to update a PackageQuery by ID
+ const updatePackageQuery = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    const updatedQuery = await PackageQuery.findByIdAndUpdate(id, updatedData, {
+      new: true, // Return updated document
+      runValidators: true, // Ensure validation is run
+    });
+
+    if (!updatedQuery) {
+      return next(new AppError("Package query not found!", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Package query updated successfully!",
+      data: updatedQuery,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+// Controller to delete a PackageQuery by ID
+ const deletePackageQuery = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deletedQuery = await PackageQuery.findByIdAndDelete(id);
+
+    if (!deletedQuery) {
+      return next(new AppError("Package query not found!", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Package query deleted successfully!",
+      data: deletedQuery,
+    });
+  } catch (error) {
+    return next(new AppError(error.message, 500));
+  }
+};
+
+
+
+
+
+
 
 
 
@@ -538,5 +823,13 @@ export {
     addPackageCategory,
     getPackageCategory,
     editPackageCategory,
-    deletePackageCategory
+    deletePackageCategory,
+    addPackageTag,
+    getPackageTag,
+    editPackageTag,
+    deletePackageTag,
+    addPackageQuery,
+    getPackageQueryById,
+    deletePackageQuery,
+    getAllPackageQueries
 }
