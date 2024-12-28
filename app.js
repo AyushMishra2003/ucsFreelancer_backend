@@ -50,7 +50,8 @@ app.use(
       "http://localhost:5174",
       "https://ucscab.com",
       "https://master.ucscab.com",
-      "https://ayush.webakash1806.com"
+      "https://ayush.webakash1806.com",
+      "https://www.ucscab.com"
     ],
     credentials: true,
   })
