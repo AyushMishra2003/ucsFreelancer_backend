@@ -51,7 +51,8 @@ app.use(
       "https://ucscab.com",
       "https://master.ucscab.com",
       "https://ayush.webakash1806.com",
-      "https://www.ucscab.com"
+      "https://www.ucscab.com",
+      "https://www.master.ucscab.com"
     ],
     credentials: true,
   })
