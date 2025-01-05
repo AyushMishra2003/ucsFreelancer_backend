@@ -27,8 +27,12 @@ const addPackage = async (req, res) => {
       categories,
       packageTag,
       rateBy,
-      destinationType
+      destinationType,
+      routes
     } = req.body;
+
+    console.log(routes);
+    
 
 
 
@@ -54,8 +58,6 @@ const addPackage = async (req, res) => {
     // Validate and parse `categories`
     let categoriesDetails = [];
 
-    console.log("catogory is",categories);
-    
     if (categories) {
       try {
         categoriesDetails = JSON.parse(categories);
@@ -65,14 +67,24 @@ const addPackage = async (req, res) => {
       }
     }
 
-    console.log("categirt details is",categoriesDetails);
-
 
     let packageDetail=[]
 
     if (packageTag) {
       try {
         packageDetail = JSON.parse(packageTag);
+      } catch (parseError) {
+        console.error('Error parsing categories:', parseError.message);
+        throw new Error('Invalid categories format. Must be valid JSON.');
+      }
+    }
+
+
+    let routesDetail=[]
+
+    if (routes) {
+      try {
+        routesDetail = JSON.parse(routes);
       } catch (parseError) {
         console.error('Error parsing categories:', parseError.message);
         throw new Error('Invalid categories format. Must be valid JSON.');
@@ -103,10 +115,11 @@ const addPackage = async (req, res) => {
       includedDetails:includedDetailsArray,
       packageTagDetail:packageDetail,
       rateBy,
-      destinationType
+      destinationType,
+      routesDetail
     });
 
-    console.log("new package is",newPackage);
+
     
 
 
@@ -152,6 +165,20 @@ const editPackage = async (req, res) => {
   try {
     const { id } = req.params; // Get package ID from URL params
     const updateData = { ...req.body };
+
+    console.log(updateData);
+
+    let routesDetail=[]
+
+    if (updateData.routes) {
+      try {
+        updateData.routesDetail = JSON.parse(updateData.routes);
+      } catch (parseError) {
+        console.error('Error parsing categories:', parseError.message);
+        throw new Error('Invalid categories format. Must be valid JSON.');
+      }
+    }
+    
 
     // Handle mainPhoto
     if (req.files.mainPhoto && req.files.mainPhoto[0]) {
@@ -265,8 +292,7 @@ const updateAllPackages = async () => {
       {}, // Empty filter matches all documents
       {
         $set: {
-          rateBy: "per person", // Set rateBy to "per person"
-          destinationType: "none", // Ensure destinationType is "none"
+          routesDetail: ["Location1", "Location2", "Location3", "Location4"], // Update routesDetail with the specified array
         },
       }
     );

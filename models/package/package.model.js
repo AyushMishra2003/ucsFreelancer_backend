@@ -53,6 +53,10 @@ const PackageSchema = new Schema(
     destinationType:{
       type:String,
       default:"none"
+    },
+    routesDetail:{
+      type:[String],
+      default:[]
     }
   },
   {
