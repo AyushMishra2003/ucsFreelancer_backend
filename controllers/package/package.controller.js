@@ -44,6 +44,9 @@ const addPackage = async (req, res) => {
         }))
       : [];
 
+    console.log(formattedDayWise);
+      
+
     // Validate and parse `includedPackages`
     let includedDetailsArray = [];
     if (includedPackages) {
@@ -178,6 +181,18 @@ const editPackage = async (req, res) => {
         throw new Error('Invalid categories format. Must be valid JSON.');
       }
     }
+    
+
+    const formattedDayWise = Array.isArray(updateData?.dayWise)
+    ? updateData?.dayWise.map((item, index) => ({
+        day: `Day ${index + 1}`, // Format as "Day 1", "Day 2", etc.
+        description: item.content, // Keep only the content
+      }))
+    : [];
+
+  console.log(formattedDayWise);
+
+  updateData.dayWise=formattedDayWise
     
 
     // Handle mainPhoto
