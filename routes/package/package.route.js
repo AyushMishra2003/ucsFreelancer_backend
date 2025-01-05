@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addPackage, addPackageCategory, addPackageInclude, addPackageTag, deletePackage, deletePackageCategory, deletePackageInclude, deletePackageTag, editPackage, editPackageCategory, editPackageInclude, editPackageTag, getAllPackages, getPackageCategory, getPackageInclude, getPackageTag, getParticularPackage } from "../../controllers/package/package.controller.js";
+import { addPackage, addPackageCategory, addPackageInclude, addPackageTag, deletePackage, deletePackageCategory, deletePackageInclude, deletePackageTag, editPackage, editPackageCategory, editPackageInclude, editPackageTag, getAllPackages, getPackageCategory, getPackageInclude, getPackageTag, getParticularPackage, updateAllPackages } from "../../controllers/package/package.controller.js";
 import upload from "../../middleware/multer.middlware.js";
 
 const PackageRouter=Router()
@@ -37,6 +37,10 @@ PackageRouter.post("/tag",addPackageTag)
 PackageRouter.put("/tag/:id",editPackageTag)
 PackageRouter.delete("/tag/:id",deletePackageTag)
 
+
+
+
+PackageRouter.post("/update/all",updateAllPackages)
 
 
 

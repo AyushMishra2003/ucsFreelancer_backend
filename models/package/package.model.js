@@ -46,6 +46,13 @@ const PackageSchema = new Schema(
     },
     category:{
       type:String
+    },
+    rateBy:{
+      type:String
+    },
+    destinationType:{
+      type:String,
+      default:"none"
     }
   },
   {

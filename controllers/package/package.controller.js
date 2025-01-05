@@ -1,7 +1,5 @@
-
 import fs from "fs";
 import cloudinary from "cloudinary";
-
 import AppError from "../../utilis/error.utlis.js";
 import PackageModel from "../../models/package/package.model.js";
 import PackageIncludeModel from "../../models/package/Includes.model.js";
@@ -27,7 +25,9 @@ const addPackage = async (req, res) => {
       includedPackages,
       location,
       categories,
-      packageTag
+      packageTag,
+      rateBy,
+      destinationType
     } = req.body;
 
 
@@ -101,7 +101,9 @@ const addPackage = async (req, res) => {
       photos: [],
       dayWise: formattedDayWise,
       includedDetails:includedDetailsArray,
-      packageTagDetail:packageDetail
+      packageTagDetail:packageDetail,
+      rateBy,
+      destinationType
     });
 
     console.log("new package is",newPackage);
@@ -251,6 +253,27 @@ const getParticularPackage = async (req, res) => {
     res.status(200).json({ message: "Package deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting package", error: error.message });
+  }
+};
+
+
+
+const updateAllPackages = async () => {
+  try {
+    // Update all documents in the collection
+    const result = await PackageModel.updateMany(
+      {}, // Empty filter matches all documents
+      {
+        $set: {
+          rateBy: "per person", // Set rateBy to "per person"
+          destinationType: "none", // Ensure destinationType is "none"
+        },
+      }
+    );
+
+    console.log(`Successfully updated ${result.modifiedCount} packages.`);
+  } catch (error) {
+    console.error("Error updating packages:", error);
   }
 };
 
@@ -831,5 +854,6 @@ export {
     addPackageQuery,
     getPackageQueryById,
     deletePackageQuery,
-    getAllPackageQueries
+    getAllPackageQueries,
+    updateAllPackages
 }
