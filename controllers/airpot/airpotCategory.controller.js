@@ -394,9 +394,6 @@ const getAllAirpotCities = async (req, res, next) => {
         return acc;
       }, []);
 
-      console.log("ayus is ",aggregatedRates);
-      console.log(cityData);
-      
       
 
       return {
@@ -416,6 +413,8 @@ const getAllAirpotCities = async (req, res, next) => {
     });
 
   } catch (error) {
+    console.log(error);
+    
     return next(new AppError(error.message, 500));
   }
 };
