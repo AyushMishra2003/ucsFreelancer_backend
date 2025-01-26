@@ -66,7 +66,6 @@ const getRate = async (req, res, next) => {
             return next(new AppError("Rate Not Found", 400));
         }
 
-        console.log("all city rate is",allCityRate);
 
         allCityRate.forEach(cityRate => {
             // Ensure rates array exists and sort it by 'perKm'

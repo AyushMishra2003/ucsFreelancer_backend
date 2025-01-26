@@ -9,11 +9,11 @@ const addRate = async (req, res, next) => {
   try {
     let { fromCity, toCity, rate, category, extraKm } = req.body;
 
-    console.log("Original Category:", category);
+    
 
     // Normalize spaces and trim
     category = category.replace(/\s+/g, ' ').trim(); 
-    console.log("Cleaned Category:", category);
+
 
     // Validate input
     if (!fromCity || !toCity) {
@@ -96,9 +96,13 @@ const getRate = async (req, res, next) => {
         model: 'UCS_OneWay_Category', // The model to use for population
         select: 'name photo numberOfSeats acAvailable numberOfBags' // Select fields to include
       })
+
+
+      console.log("1");
+      
     
 
-    console.log("ka ho e ho ka ho aaa");
+
     allCityRates.forEach(cityRate => {
       // Ensure rates array exists and sort it by 'rate'
       if (cityRate.rates && Array.isArray(cityRate.rates)) {
@@ -112,9 +116,9 @@ const getRate = async (req, res, next) => {
     
       
 
-    if (!allCityRates || allCityRates.length === 0) {
-      return next(new AppError("Rate Not Found", 400));
-    }
+    // if (!allCityRates || allCityRates.length === 0) {
+    //   return next(new AppError("Rate Not Found", 400));
+    // }
 
     res.status(200).json({
       success: true,
@@ -122,7 +126,7 @@ const getRate = async (req, res, next) => {
       data: allCityRates
     });
   } catch (error) {
-    next(error); // Pass the error to the error handling middleware
+      return next(new AppError(error?.message,500))
   }
 };
 
