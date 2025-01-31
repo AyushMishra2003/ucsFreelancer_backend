@@ -15,7 +15,7 @@ const AirpotRateSchema = new Schema(
         },
         kilometer: {
           type: String,
-          enum: ["30", "45", "50", "70"],
+          enum: ["40", "45", "55", "70"],
         },
         rate: {
           type: Number,
