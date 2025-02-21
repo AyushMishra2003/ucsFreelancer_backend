@@ -25,7 +25,8 @@
     "passport": "^0.7.0",
     "passport-facebook": "^3.0.0",
     "pdfkit": "^0.15.0",
-    "razorpay": "^2.9.4"
+    "razorpay": "^2.9.4",
+    "slugify": "^1.6.6"
   },
   "name": "ucs-backend",
   "version": "1.0.0",

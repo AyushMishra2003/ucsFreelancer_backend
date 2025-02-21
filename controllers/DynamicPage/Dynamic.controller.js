@@ -301,7 +301,8 @@ const updateChildInSection = async (req, res, next) => {
 // Controller to fetch all sections for a specific page
 const getSectionsByPage = async (req, res) => {
   const { pageName } = req.params;
-
+  console.log(pageName);
+  
   try {
     // Find the page by its name
     const page = await PageModel.findOne({ name: pageName }).populate(
@@ -315,11 +316,16 @@ const getSectionsByPage = async (req, res) => {
       });
     }
 
+    console.log(page.sections);
+    
+
     res.status(200).json({
       success: true,
       sections: page.sections,
     });
   } catch (error) {
+    console.log(error);
+    
     res.status(500).json({
       success: false,
       message: "Error fetching sections for page",
@@ -349,6 +355,9 @@ const getAllPages = async (req, res, next) => {
 const getSpecificSection = async (req, res) => {
   const { pageName, sectionTitle } = req.body; // Assuming you're passing the section title as a parameter
 
+  console.log(req.body);
+  
+
   try {
     // Find the page by its name
     const page = await PageModel.findOne({ name: pageName }).populate(
@@ -364,6 +373,9 @@ const getSpecificSection = async (req, res) => {
 
     // Find the specific section by its title (or you can modify this to search by _id)
     const section = page.sections.find((sec) => sec.title === sectionTitle);
+
+    // console.log(section);
+    
 
     if (!section) {
       return res.status(404).json({
@@ -385,6 +397,55 @@ const getSpecificSection = async (req, res) => {
   }
 };
 
+
+const getSectionChildByTitle = async (req, res) => {
+  const { pageName, childTitle } = req.params;
+  console.log(`Page: ${pageName}, Child Title: ${childTitle}`);
+
+  
+
+  try {
+    // Find the section by page name
+    const section = await SectionModel.findOne({ page: pageName });
+
+    if (!section) {
+      return res.status(404).json({
+        success: false,
+        message: "Page section not found",
+      });
+    }
+
+    // Filter the specific child by title
+    const child = section.children.find(child => child.title === childTitle);
+
+    if (!child) {
+      return res.status(404).json({
+        success: false,
+        message: "Child not found in this section",
+      });
+    }
+
+  
+    
+
+    res.status(200).json({
+      success: true,
+      message:"data are",
+      data:child
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Error fetching child from section",
+      error: error.message,
+    });
+  }
+};
+
+
+
 export {
   createPage,
   createSection,
@@ -394,4 +455,5 @@ export {
   updateSection,
   getAllPages,
   getSpecificSection,
+  getSectionChildByTitle
 };

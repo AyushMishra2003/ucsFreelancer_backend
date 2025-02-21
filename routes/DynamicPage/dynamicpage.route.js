@@ -4,6 +4,7 @@ import {
   createPage,
   createSection,
   getAllPages,
+  getSectionChildByTitle,
   getSectionsByPage,
   getSpecificSection,
   updateChildInSection,
@@ -21,6 +22,7 @@ dynamicRoute.post("/child/:id", upload.single("photo"), addChildrenToSection);
 dynamicRoute.post("/child/update/:id", upload.single("photo"), updateChildInSection);
 dynamicRoute.get("/:pageName", getSectionsByPage);
 dynamicRoute.post("/get/section", getSpecificSection);
+dynamicRoute.get("/:pageName/:childTitle", getSectionChildByTitle);
 
 export default dynamicRoute;
 
