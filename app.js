@@ -30,6 +30,8 @@ import inquiryRoute from "./routes/Inquiry/Inquiry.route.js";
 import vendorRoute from "./routes/vendor/vendor.route.js";
 import PackageRouter from "./routes/package/package.route.js";
 import query from "./routes/package/packgequery.routes.js";
+import opeatorRoute from "./routes/operator/operator.route.js";
+import operatorAuthRoute from "./routes/operator/operatorAuth.route.js";
 // Load environment variables
 config();
 
@@ -70,24 +72,24 @@ app.use("/api/v1/airpot", airpotRoute);
 app.use("/api/v1/chart", chart);
 app.use("/api/v1/tc", termRoute);
 app.use("/api/v1/payment", PayementRouter);
-
 app.use("/api/v1/mode", paymentModeRoute);
 
 // Route for adding round category with file upload
 app.use("/api/v1/round", roundRouter);
 app.use("/api/v1/oneway", oneWayRouter);
-
 app.use("/api/v1/distance", distanceRoute);
-
 app.get("/api/v1/invoice/:id", generateInvoice);
 app.use("/api/v1/dynamic", dynamicRoute);
 app.use("/api/v1/inquiry", inquiryRoute);
 app.use("/api/v1/vendor", vendorRoute);
-
-
-
 app.use("/api/v1/package",PackageRouter)
 app.use("/api/v1/query",query)
+
+
+// dashboard Operator
+app.use("/api/v1/role",opeatorRoute)
+app.use("/api/v1/operator",operatorAuthRoute)
+
 
 
 
