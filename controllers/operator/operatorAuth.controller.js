@@ -52,7 +52,7 @@ const addOperator = async (req, res, next) => {
         const newOperator = new OperatorAuthModel({
             name,
             email,
-            password: hashedPassword,
+            password,
             role: roleObjects.map(role => role._id), // Ensure only ObjectIds are stored,
         });
 
@@ -103,6 +103,9 @@ const loginOperator = async (req, res, next) => {
         }
 
         const operator = await OperatorAuthModel.findOne({email})
+            .populate("role")
+
+   
 
         console.log(operator);
         
@@ -115,16 +118,19 @@ const loginOperator = async (req, res, next) => {
              return next(new AppError("Invalid User",401))
         }
 
-        const isMatched = await verifyPassword(password, operator.password)
+        if(operator.password!=password){
+             return next(new AppError("Password is Not Valid",400))
+        }
+        // const isMatched = await verifyPassword(password, operator.password)
 
-        console.log(isMatched);
+        // console.log(isMatched);
         
 
 
-        if (!isMatched) {
+        // if (!isMatched) {
             
-            return next(new AppError("Invalid credentials", 400))
-        }
+        //     return next(new AppError("Invalid credentials", 400))
+        // }
 
         const encryptedUserId = await encrypt(operator._id.toString());
 
@@ -212,6 +218,67 @@ const updateStatus=async(req,res,next)=>{
      }
 }
 
+const editOperator = async (req, res, next) => {
+    try {
+        const { id } = req.params; // Operator ID from URL params
+        const { name, email, role } = req.body;
+
+        // Validate required fields
+        if (!id || !name || !email || !role || role.length === 0) {
+            return next(new AppError("All fields including role are required", 400));
+        }
+
+        if (name.length > 50) {
+            return next(new AppError("Name must be less than 50 characters", 400));
+        }
+
+        if (!validator.isEmail(email)) {
+            return next(new AppError("Email is not valid", 400));
+        }
+
+        // Check if operator exists
+        const validOperator = await OperatorAuthModel.findById(id);
+        if (!validOperator) {
+            return next(new AppError("Operator not found", 404));
+        }
+
+        // Check if email is already used by another operator
+        const emailExists = await OperatorAuthModel.findOne({ email, _id: { $ne: id } });
+        if (emailExists) {
+            return next(new AppError("Email is already in use by another operator", 400));
+        }
+
+        // Validate roles: Convert role IDs to ObjectIds
+        const roleObjects = await RoleModel.find({ _id: { $in: role } });
+        if (roleObjects.length !== role.length) {
+            return next(new AppError("One or more roles are invalid", 400));
+        }
+
+        // Update operator details (password remains unchanged)
+        validOperator.name = name;
+        validOperator.email = email;
+        validOperator.role = roleObjects.map(role => role._id); // Store ObjectId
+
+        // Generate new token
+        const encryptedUserId = await encrypt(validOperator._id.toString());
+        const token = jwt.sign({ operatorId: encryptedUserId }, process.env.SECRET, { expiresIn: "2d" });
+
+        validOperator.token = token;
+
+        await validOperator.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Operator updated successfully",
+            data: validOperator
+        });
+
+    } catch (error) {
+        return next(new AppError(error.message, 500));
+    }
+};
+
+
 
 
 const isValidUser=async(req,res,next)=>{
@@ -232,7 +299,10 @@ const isValidUser=async(req,res,next)=>{
         }
 
 
-        const validOperator=await OperatorAuthModel.findById(decoded?.userId)
+        const validOperator = await OperatorAuthModel.findById(decoded?.userId)
+    .populate("role")  // Populate role details
+   
+
 
         if(!validOperator){
               return next(new AppError("Operaotor Not Found",404))
@@ -253,7 +323,32 @@ const isValidUser=async(req,res,next)=>{
      }
 }
 
+const deleteOperator=async(req,res,next)=>{
+     try{
+
+        const {id}=req.params
+
+        const validOperator=await OperatorAuthModel.findById(id)
+
+        if(!validOperator){
+             return next(new AppError("Operator is Not Valid",400))
+        }
+
+        await OperatorAuthModel.findByIdAndDelete(id)
+
+        res.status(200).json({
+            success:true,
+            message:"Operator Delete Succesfully"
+        })
+
+     }catch(error){
+        console.log(error);
+        
+         return next(new AppError(error.message,500))
+     }
+}
 
 
 
-export { addOperator, getOperator,loginOperator,operatorLogout,updateStatus ,isValidUser};
+
+export { addOperator, getOperator,loginOperator,operatorLogout,updateStatus ,isValidUser,deleteOperator,editOperator};
