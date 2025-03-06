@@ -221,7 +221,7 @@ const updateStatus=async(req,res,next)=>{
 const editOperator = async (req, res, next) => {
     try {
         const { id } = req.params; // Operator ID from URL params
-        const { name, email, role } = req.body;
+        const { name, email, role ,password} = req.body;
 
         // Validate required fields
         if (!id || !name || !email || !role || role.length === 0) {
@@ -257,6 +257,9 @@ const editOperator = async (req, res, next) => {
         // Update operator details (password remains unchanged)
         validOperator.name = name;
         validOperator.email = email;
+        if(password){
+             validOperator.password=password
+        }
         validOperator.role = roleObjects.map(role => role._id); // Store ObjectId
 
         // Generate new token
