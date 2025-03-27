@@ -100,14 +100,9 @@ const createSection = async (req, res, next) => {
 
 const updateSection = async (req, res, next) => {
   const { title, description,oldtitle ,meta_description,meta_title,meta_url} = req.body;
-
-
-  console.log(oldtitle);
+  // console.log(oldtitle);
   
   const { sectionId } = req.params;
-
-
-  
 
   try {
     // Find the section by ID
@@ -125,6 +120,9 @@ const updateSection = async (req, res, next) => {
         message: "Section not found",
       });
     }
+
+    // console.log(section);
+    
 
     // Update title, description, and photo if provided
     section.title = title || section.title;
@@ -169,7 +167,7 @@ const updateSection = async (req, res, next) => {
 
 // Function to add a new child to a section
 const addChildrenToSection = async (req, res, next) => {
-  console.log("Add child method called");
+
   const { id } = req.params; // Section ID
   const { title, description,meta_description,meta_title,meta_url } = req.body;
 
@@ -244,15 +242,9 @@ const updateChildInSection = async (req, res, next) => {
   const { childId,title, description,oldTitle,meta_description,meta_title,meta_url } = req.body; // Include childId to identify the child
 
 
-
-  
-
   try {
     // Fetch the section by ID
     const section = await SectionModel.findById(id);
-
-   
-    
 
     if (!section) {
       return res.status(404).json({
@@ -314,7 +306,7 @@ const updateChildInSection = async (req, res, next) => {
 // Controller to fetch all sections for a specific page
 const getSectionsByPage = async (req, res) => {
   const { pageName } = req.params;
-  console.log(pageName);
+
   
   try {
     // Find the page by its name
@@ -329,7 +321,7 @@ const getSectionsByPage = async (req, res) => {
       });
     }
 
-    console.log(page.sections);
+
     
 
     res.status(200).json({
