@@ -30,7 +30,7 @@ const createPage = async (req, res) => {
 
 // Controller to create a new section
 const createSection = async (req, res, next) => {
-  const { title, description, page } = req.body;
+  const { title, description, page,meta_description,meta_title,meta_url } = req.body;
 
   try {
     // Check if a section with the same title already exists
@@ -52,6 +52,9 @@ const createSection = async (req, res, next) => {
         public_id: "",
         secure_url: "",
       },
+      meta_description,
+      meta_title,
+      meta_url,
       children: [], // Default to an empty array
     });
 
@@ -96,14 +99,14 @@ const createSection = async (req, res, next) => {
 };
 
 const updateSection = async (req, res, next) => {
-  const { title, description,oldtitle } = req.body;
+  const { title, description,oldtitle ,meta_description,meta_title,meta_url} = req.body;
 
 
   console.log(oldtitle);
   
   const { sectionId } = req.params;
 
-  console.log("ayush");
+
   
 
   try {
@@ -113,7 +116,7 @@ const updateSection = async (req, res, next) => {
     //  console.log(section);
      
    section = await SectionModel.findOne({title:oldtitle});
-   console.log(section);
+
    
 
     if (!section) {
@@ -126,6 +129,9 @@ const updateSection = async (req, res, next) => {
     // Update title, description, and photo if provided
     section.title = title || section.title;
     section.description = description || section.description;
+    section.meta_description=meta_description || section.meta_description;
+    section.meta_title=meta_title || section.meta_title;
+    section.meta_url=meta_url || section.meta_url;
 
     if (req.file) {
       console.log("File Upload:", req.file);
@@ -165,7 +171,7 @@ const updateSection = async (req, res, next) => {
 const addChildrenToSection = async (req, res, next) => {
   console.log("Add child method called");
   const { id } = req.params; // Section ID
-  const { title, description } = req.body;
+  const { title, description,meta_description,meta_title,meta_url } = req.body;
 
   const newChild = {
     title: title,
@@ -174,6 +180,9 @@ const addChildrenToSection = async (req, res, next) => {
       public_id: "",
       secure_url: "",
     },
+    meta_description,
+    meta_title,
+    meta_url
   };
 
   try {
@@ -232,19 +241,17 @@ const updateChildInSection = async (req, res, next) => {
 
   const { id } = req.params; // Section ID
 
-  const { childId,title, description,oldTitle } = req.body; // Include childId to identify the child
+  const { childId,title, description,oldTitle,meta_description,meta_title,meta_url } = req.body; // Include childId to identify the child
 
 
-  console.log(oldTitle);
-  console.log(title);
-  
+
   
 
   try {
     // Fetch the section by ID
     const section = await SectionModel.findById(id);
 
-    console.log(section);
+   
     
 
     if (!section) {
@@ -267,6 +274,12 @@ const updateChildInSection = async (req, res, next) => {
     // Update child properties
     if (title) child.title = title;
     if (description) child.description = description;
+
+    if(meta_description) child.meta_description=meta_description;
+
+    if(meta_title) child.meta_title=meta_title;
+
+    if(meta_url) child.meta_url=meta_url;
 
     // Handle file upload if it exists
     if (req.file) {

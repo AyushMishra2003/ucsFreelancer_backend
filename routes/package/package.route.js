@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addPackage, addPackageCategory, addPackageInclude, addPackageTag, deletePackage, deletePackageCategory, deletePackageInclude, deletePackageTag, editPackage, editPackageCategory, editPackageInclude, editPackageTag, getAllPackages, getPackageCategory, getPackageInclude, getPackageTag, getParticularPackage, updateAllPackages } from "../../controllers/package/package.controller.js";
+import { addPackage, addPackageCategory, addPackageInclude, addPackageTag, deletePackage, deletePackageCategory, deletePackageInclude, deletePackageTag, editPackage, editPackageCategory, editPackageInclude, editPackageTag, getAllPackages, getPackageByName, getPackageCategory, getPackageInclude, getPackageTag, getParticularPackage, updateAllPackages } from "../../controllers/package/package.controller.js";
 import upload from "../../middleware/multer.middlware.js";
 
 const PackageRouter=Router()
@@ -14,6 +14,7 @@ PackageRouter.get("/category",getPackageCategory)
 PackageRouter.get("/tag",getPackageTag)
 
 PackageRouter.get("/:id",getParticularPackage)
+PackageRouter.post("/byName",getPackageByName)
 PackageRouter.put("/:id", upload.fields([
   { name: 'mainPhoto', maxCount: 1 }, 
   { name: 'photos', maxCount: 10 }    

@@ -11,3 +11,5 @@ opeatorRoute.put("/:id",updateRole)
 opeatorRoute.delete("/:id",deleteRole)
 
 export default opeatorRoute
+
+

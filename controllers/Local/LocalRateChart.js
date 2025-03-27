@@ -9,6 +9,14 @@ const addRate = async (req, res, next) => {
 
         // Validate input
         if (!cityName || !category || !perKm || !perHour || !rateFor80Km8Hours || !rateFor120Km12Hours) {
+
+            // return res.send({status:200,message:"ajalk",data:an})
+
+            // return  res.status(200).json({
+            //     success:true,
+            //     message:"ahjk",
+
+            // })
             return next(new AppError("All fields are required", 400));
         }
 

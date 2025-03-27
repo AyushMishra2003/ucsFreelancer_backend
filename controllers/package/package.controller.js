@@ -792,6 +792,8 @@ const addPackageQuery = async (req, res, next) => {
       message: "Package queries fetched successfully!",
       data: queries,
     });
+
+    // res.send({status:404, message:"pacage",data:queries})
   } catch (error) {
     return next(new AppError(error.message, 500));
   }
@@ -865,6 +867,41 @@ const addPackageQuery = async (req, res, next) => {
 };
 
 
+const getPackageByName=async(req,res,next)=>{
+   try{
+       
+      const {name}=req.body
+
+      console.log(name);
+
+      const package1=await PackageModel.find({})
+
+      console.log(package1);
+      
+      
+
+      if(!name){
+         return next(new AppError("Name is Required",400))
+      }
+
+      const findPackage=await PackageModel.find({packageName:name})
+
+      if(!findPackage){
+         return next(new AppError("Package Not Found",400))
+      }
+
+      res.status(200).json({
+        success:true,
+        message:"Package Found",
+        data:findPackage
+      })
+
+   }catch(error){
+    return next(new AppError(error.message,500))
+   }
+}
+
+
 
 
 
@@ -896,5 +933,6 @@ export {
     getPackageQueryById,
     deletePackageQuery,
     getAllPackageQueries,
-    updateAllPackages
+    updateAllPackages,
+    getPackageByName
 }

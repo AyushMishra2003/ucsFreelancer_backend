@@ -93,6 +93,7 @@ app.use("/api/v1/operator",operatorAuthRoute)
 
 
 
+
 // Default route
 app.get("/", (req, res) => {
   res.status(200).json({
