@@ -75,21 +75,21 @@ const validateTime = (expiryDate, expiryTime) => {
 
 
 const generateBookingId = async (bookingDate) => {
-  const d1=new Date()
+  const d1 = new Date()
 
-  console.log(d1);
-  
+
+
   const date = getLocalDate()
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
 
   const dateStr = `${year}${month}${day}`;
-  const prefix = 'UCS';
+  const prefix = 'UCS-';
 
 
-  console.log(date,year,month,day);
-  
+  console.log(date, year, month, day);
+
 
   // Find the latest booking ID for the provided booking date
   const latestBooking = await Booking.findOne({
@@ -111,12 +111,8 @@ const generateBookingId = async (bookingDate) => {
 const addOneWayBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation, extraPerKm,tripType, category, bookingDate, bookingTime,gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress,actualAmount,discountAmount,totalAmount,gstAmount
+      fromLocation, toLocation, extraPerKm, tripType, category, bookingDate, bookingTime, gst, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, actualAmount, discountAmount, totalAmount, gstAmount
     } = req.body;
-
-
-    console.log("req.body",req.body);
-    
 
 
     const now = new Date();
@@ -126,12 +122,12 @@ const addOneWayBooking = async (req, res, next) => {
     if (!bookingTime) {
       bookingTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); // 12-hour format (e.g., 2:30 PM)
     }
-    
+
     // Validate required fields
 
-    console.log(fromLocation,toLocation,tripType,category,bookingDate,bookingTime,pickupDate,pickupTime,email,pickupAddress,dropAddress);
+    console.log(fromLocation, toLocation, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, email, pickupAddress, dropAddress);
 
-    if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress ) {
+    if (!fromLocation || !toLocation || !tripType || !category || !bookingDate || !bookingTime || !pickupDate || !pickupTime || !email || !pickupAddress || !dropAddress) {
       console.log("kya mai chala kya bhai");
       return next(new AppError("All required fields must be provided", 400));
     }
@@ -159,16 +155,16 @@ const addOneWayBooking = async (req, res, next) => {
         return next(new AppError("Rate information not found for the specified route", 400));
       }
 
-      console.log(cityRate);
+
 
 
 
       const onewayCategory = await oneWayCategoryModel.findOne({ name: category });
-      
-      
+
+
       const rateObj = cityRate.rates.find(rate => rate.category.toString() === onewayCategory._id.toString());
       console.log(rateObj);
-      
+
       if (!rateObj) {
         return next(new AppError("Rate category not found for the specified route", 400));
       }
@@ -181,7 +177,7 @@ const addOneWayBooking = async (req, res, next) => {
     // Handle voucher code if provided
     let discountInfo
     if (voucherCode) {
-       discountInfo = await Discount.findOne({
+      discountInfo = await Discount.findOne({
         voucherCode: voucherCode, // Assuming the discount document has a 'code' field
         active: true,
         $or: [
@@ -195,8 +191,8 @@ const addOneWayBooking = async (req, res, next) => {
         const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
 
         // Check if the current date and time are within the discount's expiry date and time
-        if (discountExpiryDate.isBefore(new Date()) || 
-            (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
+        if (discountExpiryDate.isBefore(new Date()) ||
+          (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
           return next(new AppError("Discount has expired", 400));
         }
 
@@ -231,10 +227,10 @@ const addOneWayBooking = async (req, res, next) => {
       toLocation,
       tripType,
       category,
-      actualPrice:actualAmount,
-      discountValue:discountAmount,
-      totalPrice:totalAmount,
-      gstPrice:gstAmount,
+      actualPrice: actualAmount,
+      discountValue: discountAmount,
+      totalPrice: totalAmount,
+      gstPrice: gstAmount,
       bookingDate,
       bookingTime,
       pickupDate,
@@ -284,7 +280,7 @@ const addOneWayBooking = async (req, res, next) => {
 
 
       console.log(booking);
-      
+
 
       // Send booking confirmation email to existing user
       const bookingSubject = `Booking Confirmation ${bookingId} `;
@@ -421,7 +417,7 @@ const addOneWayBooking = async (req, res, next) => {
         name,
         email,
         phoneNumber,
-        password:phoneNumber,
+        password: phoneNumber,
         bookingHistory: [booking._id]
       });
 
@@ -576,7 +572,7 @@ const addOneWayBooking = async (req, res, next) => {
 const addLocalTripBooking = async (req, res, next) => {
   try {
     let {
-      cityName, tripType, extraPerKm,extraPerHr,category,gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode , actualAmount,discountAmount,totalAmount,gstAmount
+      cityName, tripType, extraPerKm, extraPerHr, category, gst, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, pickupAddress, dropAddress, distance, duration, paymentMode, actualAmount, discountAmount, totalAmount, gstAmount
     } = req.body;
 
     // console.log("req.body", req.body);
@@ -615,12 +611,12 @@ const addLocalTripBooking = async (req, res, next) => {
 
 
       // console.log(localCityRate);
-      
+
 
       const categoryDoc = await LocalCategoryModel.findOne({ name: category });
 
       if (!categoryDoc) {
-          return next(new AppError("Category not found", 400));
+        return next(new AppError("Category not found", 400));
       }
 
       const categoryId = categoryDoc._id;
@@ -629,27 +625,27 @@ const addLocalTripBooking = async (req, res, next) => {
       const cityRate = await LocalCityRate.findOne({ cityName });
 
       if (!cityRate) {
-          return next(new AppError("No rate found for the given city", 404));
+        return next(new AppError("No rate found for the given city", 404));
       }
 
       // Find the specific rate by category in the rates array
       const rateIndex = cityRate.rates.find(
-          (rateObj) => rateObj.category.toString() === categoryId.toString()
+        (rateObj) => rateObj.category.toString() === categoryId.toString()
       );
 
       if (rateIndex === -1) {
-          return next(new AppError("No category found for the given city", 404));
+        return next(new AppError("No category found for the given city", 404));
       }
 
-      console.log("rate index is",rateIndex);
-      
+      console.log("rate index is", rateIndex);
+
 
       // Determine rate based on distance and duration
       if (distance === 80) {
 
         console.log(rateIndex);
-        
-        
+
+
         actualPrice = rateIndex.rateFor80Km8Hours;
       } else if (distance === 120) {
         actualPrice = rateIndex.rateFor120Km12Hours;
@@ -672,7 +668,7 @@ const addLocalTripBooking = async (req, res, next) => {
     let discountInfo;
     if (voucherCode) {
       console.log(voucherCode);
-      
+
       discountInfo = await Discount.findOne({
         voucherCode: voucherCode,
         active: true,
@@ -684,19 +680,19 @@ const addLocalTripBooking = async (req, res, next) => {
 
       // console.log("dixout info",discountInfo);
       // console.log("mera log ",discountInfo , discountInfo.tripType);
-      
 
-      if (discountInfo && discountInfo.tripType===tripType) {
+
+      if (discountInfo && discountInfo.tripType === tripType) {
         const discountExpiryDate = moment(discountInfo.expiryDate).endOf('day');
         const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
 
         if (discountExpiryDate.isBefore(new Date()) ||
           (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
-            
+
         }
 
         console.log(discountInfo);
-        
+
 
         if (actualPrice >= discountInfo.discountLimit) {
           if (discountInfo.discountType === 1) {
@@ -704,7 +700,7 @@ const addLocalTripBooking = async (req, res, next) => {
           } else if (discountInfo.discountType === 2) {
             discountValue = discountInfo.discountValue;
           }
-        } 
+        }
       }
     }
 
@@ -719,10 +715,10 @@ const addLocalTripBooking = async (req, res, next) => {
       cityName,
       tripType,
       category,
-      actualPrice:actualAmount,
-      discountValue:discountAmount,
-      totalPrice:totalAmount,
-      gstPrice:gstAmount,
+      actualPrice: actualAmount,
+      discountValue: discountAmount,
+      totalPrice: totalAmount,
+      gstPrice: gstAmount,
       bookingDate,
       bookingTime,
       pickupDate,
@@ -730,14 +726,14 @@ const addLocalTripBooking = async (req, res, next) => {
       pickupAddress,
       dropAddress,
       extraPerKm,
-      extraPerHour:extraPerHr,
+      extraPerHour: extraPerHr,
       paymentMode,
       status: "confirmed"
     });
 
 
     // console.log(booking);
-    
+
 
     // Save booking first
     await booking.save();
@@ -897,7 +893,7 @@ const addLocalTripBooking = async (req, res, next) => {
         name,
         email,
         phoneNumber,
-        password:phoneNumber,
+        password: phoneNumber,
         bookingHistory: [booking._id]
       });
 
@@ -1103,10 +1099,10 @@ const getDistanceBetweenAirports = async (fromLocation, toLocation) => {
   }
 };
 
-const getDistanceBetweenLocation = async (req,res,next) => {
+const getDistanceBetweenLocation = async (req, res, next) => {
   try {
 
-    const {fromLocation,toLocation}=req.body
+    const { fromLocation, toLocation } = req.body
     const fromCoordinates = await getCoordinates(fromLocation);
     const toCoordinates = await getCoordinates(toLocation);
 
@@ -1115,16 +1111,16 @@ const getDistanceBetweenLocation = async (req,res,next) => {
       if (distance !== null) {
         console.log(`Distance between ${fromLocation} and ${toLocation} is ${distance.toFixed(2)} km.`);
         res.status(200).json({
-          success:true,
-          message:"Distance is",
+          success: true,
+          message: "Distance is",
           distance
         })
-      }else{
-        return next(new AppError("Distance not Found",402))
+      } else {
+        return next(new AppError("Distance not Found", 402))
       }
     }
   } catch (error) {
-     return next(new AppError(error.message,500))
+    return next(new AppError(error.message, 500))
   }
 };
 
@@ -1133,36 +1129,36 @@ const getDistanceBetweenLocation = async (req,res,next) => {
 const addAirpotBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, gst,extraPerKm,rate, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode,distance,airpotValue,  actualAmount,discountAmount,totalAmount,gstAmount
+      fromLocation, gst, extraPerKm, rate, airpotAddress, tripType, category, bookingDate, bookingTime, pickupDate, pickupTime, name, email, phoneNumber, voucherCode, paymentMode, distance, airpotValue, actualAmount, discountAmount, totalAmount, gstAmount
     } = req.body;
 
 
-    console.log("req.body",req.body);
+    console.log("req.body", req.body);
     console.log(voucherCode);
-    
 
-   let totalDistance= getDistanceBetweenAirports(fromLocation,  airpotAddress);
 
-   console.log(totalDistance);
-   
+    let totalDistance = getDistanceBetweenAirports(fromLocation, airpotAddress);
 
-   if(!totalDistance || totalDistance>70){
-    return next(new AppError("Sorry Service is UnAvailable"))
-   }
+    console.log(totalDistance);
 
-   if(totalDistance<=30){
-      totalDistance=30
-   }else{
-      if(totalDistance<=40){
-        totalDistance=45
-      }else{
-        if(totalDistance<=50){
-          totalDistance=50
-        }else{
-          totalDistance=70
+
+    if (!totalDistance || totalDistance > 70) {
+      return next(new AppError("Sorry Service is UnAvailable"))
+    }
+
+    if (totalDistance <= 30) {
+      totalDistance = 30
+    } else {
+      if (totalDistance <= 40) {
+        totalDistance = 45
+      } else {
+        if (totalDistance <= 50) {
+          totalDistance = 50
+        } else {
+          totalDistance = 70
         }
       }
-   }
+    }
 
     const now = new Date();
     if (!bookingDate) {
@@ -1171,12 +1167,12 @@ const addAirpotBooking = async (req, res, next) => {
     if (!bookingTime) {
       bookingTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }); // 12-hour format (e.g., 2:30 PM)
     }
-    
+
     // Validate required fields
 
     // console.log(fromLocation,toLocation,tripType,category,bookingDate,bookingTime,pickupDate,pickupTime,email,pickupAddress,dropAddress,paymentMode);
 
-    if (!fromLocation || !airpotAddress   || !tripType || !category || !pickupDate || !pickupTime || !email || !paymentMode) {
+    if (!fromLocation || !airpotAddress || !tripType || !category || !pickupDate || !pickupTime || !email || !paymentMode) {
       console.log("kya mai chala kya bhai");
       return next(new AppError("All required fields must be provided", 400));
     }
@@ -1204,44 +1200,44 @@ const addAirpotBooking = async (req, res, next) => {
 
     const airpotRate = await airpotCategory.findOne({ name: category });
     console.log(airpotRate);
-    
+
     if (!airpotRate) {
       return next(new AppError("Rate information not found for the specified route", 400));
     }
     console.log(airpotRate);
 
-    actualPrice=rate
+    actualPrice = rate
 
     // if (tripType === 'Airport Trip') {
     //   console.log(category);
-      
-  
-      
+
+
+
     //   // Convert distance to string if necessary to match the schema type
     //   const distanceStr = distance.toString();
 
     //   // console.log(totalDistance);
-      
-      
+
+
     //   // // Find rate for the exact distance
     //   // const rateObj = airpotRate.rates.find(rate => rate.kilometer === distanceStr);
 
     //   // console.log(rateObj);
-      
-      
+
+
     //   // if (!rateObj) {
     //   //   return next(new AppError("Rate category not found for the specified distance", 400));
     //   // }
-      
+
     //   // Extract the rate and calculate the actual price
     //    actualPrice = rateObj.rate;
-      
- 
+
+
     //   // Now, you can proceed with the calculated actualPrice
     //   console.log(`The price for this route is: ${actualPrice}`);
-      
+
     //   // Return the price or perform further actions
-      
+
     // }
 
     // Initialize discount
@@ -1250,7 +1246,7 @@ const addAirpotBooking = async (req, res, next) => {
     // Handle voucher code if provided
     let discountInfo
     if (voucherCode) {
-       discountInfo = await Discount.findOne({
+      discountInfo = await Discount.findOne({
         voucherCode: voucherCode, // Assuming the discount document has a 'code' field
         active: true,
         $or: [
@@ -1259,13 +1255,13 @@ const addAirpotBooking = async (req, res, next) => {
         ]
       });
 
-      if (discountInfo && discountInfo.tripType===tripType) {
+      if (discountInfo && discountInfo.tripType === tripType) {
         const discountExpiryDate = moment(discountInfo.expiryDate).endOf('day');
         const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
 
         // Check if the current date and time are within the discount's expiry date and time
-        if (discountExpiryDate.isBefore(new Date()) || 
-            (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
+        if (discountExpiryDate.isBefore(new Date()) ||
+          (discountExpiryDate.isSame(new Date(), 'day') && discountExpiryTime.isBefore(moment()))) {
           return next(new AppError("Discount has expired", 400));
         }
 
@@ -1292,14 +1288,14 @@ const addAirpotBooking = async (req, res, next) => {
 
     // Calculate the total price after discount
     // const totalPrice = actualPrice - discountValue;
-    let pickupAddress=""
-    let dropAddress=""
-    if(airpotValue===1){
-        pickupAddress=fromLocation
-        dropAddress=airpotAddress
-    }else{
-      pickupAddress=airpotAddress
-      dropAddress=fromLocation
+    let pickupAddress = ""
+    let dropAddress = ""
+    if (airpotValue === 1) {
+      pickupAddress = fromLocation
+      dropAddress = airpotAddress
+    } else {
+      pickupAddress = airpotAddress
+      dropAddress = fromLocation
     }
 
 
@@ -1312,10 +1308,10 @@ const addAirpotBooking = async (req, res, next) => {
       dropAddress,
       tripType,
       category,
-      actualPrice:actualAmount,
-      discountValue:discountAmount,
-      totalPrice:totalAmount,
-      gstPrice:gstAmount,
+      actualPrice: actualAmount,
+      discountValue: discountAmount,
+      totalPrice: totalAmount,
+      gstPrice: gstAmount,
       bookingDate,
       bookingTime,
       pickupDate,
@@ -1502,7 +1498,7 @@ const addAirpotBooking = async (req, res, next) => {
         name,
         email,
         phoneNumber,
-        password:phoneNumber,
+        password: phoneNumber,
         bookingHistory: [booking._id]
       });
 
@@ -1657,7 +1653,7 @@ const addAirpotBooking = async (req, res, next) => {
 const addRoundTripBooking = async (req, res, next) => {
   try {
     let {
-      fromLocation, toLocation,gst,extraPerKm,perKm, tripType,pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance,  actualAmount,discountAmount,totalAmount,gstAmount
+      fromLocation, toLocation, gst, extraPerKm, perKm, tripType, pickupAddress, category, bookingDate, bookingTime, pickupDate, pickupTime, returnDate, name, email, phoneNumber, voucherCode, paymentMode, distance, actualAmount, discountAmount, totalAmount, gstAmount
     } = req.body;
 
     console.log("req.body", req.body);
@@ -1667,7 +1663,7 @@ const addRoundTripBooking = async (req, res, next) => {
     let totalDistance = await getDistanceBetweenAirports(fromLocation, toLocation);
 
     console.log(`Total distance for round trip: ${totalDistance}`);
-    
+
     // Fetch round trip rate based on the category
     // const roundTripRate = await roundCategoryModel.findOne({ name: category });
     // Calculate total days between pickupDate and returnDate
@@ -1675,7 +1671,7 @@ const addRoundTripBooking = async (req, res, next) => {
     const returnD = new Date(returnDate);
     let totalDays = Math.ceil((returnD - pickup) / (1000 * 60 * 60 * 24)); // Convert milliseconds to days
     console.log(`Total days between pickup and return: ${totalDays}`);
-    totalDays=totalDays+1
+    totalDays = totalDays + 1
 
 
     // Calculate cost by days
@@ -1688,11 +1684,11 @@ const addRoundTripBooking = async (req, res, next) => {
 
     // console.log("round trip distance",roundTripDistance);
     // console.log(roundTripRate.perKm);
-    
+
 
     // Calculate the cost for the distance
     const distanceCost = (roundTripDistance * perKm)
-    const distanceDayCost=(distanceByDays*(perKm))
+    const distanceDayCost = (distanceByDays * (perKm))
     console.log(`Distance cost (roundTripDistance * rate per km): ${distanceCost}`);
 
     // Choose the greater value between distance cost and distance by days
@@ -1726,11 +1722,11 @@ const addRoundTripBooking = async (req, res, next) => {
       });
 
       console.log(discountInfo);
-      
 
-      if (discountInfo && discountInfo.tripType === "Round Trip" ) {
+
+      if (discountInfo && discountInfo.tripType === "Round Trip") {
         console.log("aa raha hu main");
-        
+
         const discountExpiryDate = moment(discountInfo.expiryDate).endOf('day');
         const discountExpiryTime = moment(discountInfo.expiryTime, 'h:mm A');
 
@@ -1768,10 +1764,10 @@ const addRoundTripBooking = async (req, res, next) => {
       toLocation,
       tripType,
       category,
-      actualPrice:actualAmount,
-      discountValue:discountAmount,
-      totalPrice:totalAmount,
-      gstPrice:gstAmount,
+      actualPrice: actualAmount,
+      discountValue: discountAmount,
+      totalPrice: totalAmount,
+      gstPrice: gstAmount,
       bookingDate,
       returnDate,
       bookingTime,
@@ -1787,7 +1783,7 @@ const addRoundTripBooking = async (req, res, next) => {
     // Save booking and handle user logic
     await booking.save();
     let user = await User.findOne({ email });
-    
+
 
 
 
@@ -1822,7 +1818,7 @@ const addRoundTripBooking = async (req, res, next) => {
       `;
       await sendEmail(email, otpSubject, otpMessage);
 
-  
+
 
     } else {
       booking.userId = user._id;
@@ -1832,7 +1828,7 @@ const addRoundTripBooking = async (req, res, next) => {
       await user.save();
     }
 
-    
+
 
     // Send confirmation email
     const bookingSubject = `Booking Confirmation ${bookingId} `;
@@ -1933,7 +1929,7 @@ const addRoundTripBooking = async (req, res, next) => {
 </div>
 
       `;
-    
+
     await sendEmail(user.email, bookingSubject, bookingMessage);
 
     return res.status(200).json({
@@ -1989,8 +1985,8 @@ const verifyOneWayBooking = async (req, res, next) => {
       return next(new AppError("Booking and user do not match", 403));
     }
 
-    if(!validBooking.status==="pending"){
-      return next(new AppError("Booking is not Valid",402))
+    if (!validBooking.status === "pending") {
+      return next(new AppError("Booking is not Valid", 402))
     }
 
     // Check if the booking date is today
@@ -2001,31 +1997,31 @@ const verifyOneWayBooking = async (req, res, next) => {
       // Booking date is today; check the time
       const bookingTime = validBooking.bookingTime; // Expecting time in HH:MM:SS format
       const bookingDateTime = new Date(`${currentDate.toDateString()} ${bookingTime}`);
-      
+
       // Ensure booking time is not in the past
       if (Date.now() > bookingDateTime.getTime()) {
-        validBooking.status="cancelled"
+        validBooking.status = "cancelled"
         await validBooking.save()
         return next(new AppError("Booking time has already passed", 400));
       }
     } else if (bookingDate < currentDate) {
       // Booking date is in the past (not today)
-        validBooking.status="cancelled"
+      validBooking.status = "cancelled"
 
-      
 
-        await validBooking.save()
+
+      await validBooking.save()
       return next(new AppError("Booking date is in the past and is no longer valid", 400));
     }
 
 
-    validBooking.status="confirmed"
+    validBooking.status = "confirmed"
 
     await validBooking.save()
-    
-          // Send booking confirmation email
-          const subject = 'Booking Confirmation';
-          const message = `
+
+    // Send booking confirmation email
+    const subject = 'Booking Confirmation';
+    const message = `
             <p>Dear ${user.name},</p>
             <p>Your booking has been confirmed. Here are the details:</p>
             <ul>
@@ -2042,7 +2038,7 @@ const verifyOneWayBooking = async (req, res, next) => {
             <p>Thank you for booking with us!</p>
             <p>Best regards,<br>UCS CAB Support Team</p>
           `;
-          await sendEmail(user.email, subject, message);
+    await sendEmail(user.email, subject, message);
 
 
 
@@ -2058,81 +2054,108 @@ const verifyOneWayBooking = async (req, res, next) => {
 };
 
 
-const getOneWayBooking=async(req,res,next)=>{
-    try{
-          const {fromLocation,toLocation}=req.body
+const getOneWayBooking = async (req, res, next) => {
+  try {
+    const { fromLocation, toLocation } = req.body
 
-          console.log(req.body);
-          
-
-          const allAvailableCars = await CityRate.find({ fromCity: fromLocation, toCity: toLocation });
-        
-          if(!allAvailableCars){
-            return next(new AppError("No Car Available",404))
-          }
-          
-          res.status(200).json({
-            success:true,
-            message:"All Car Avaiable",
-            data:allAvailableCars
-          })
+    console.log(req.body);
 
 
-    }catch(error){
-        return next(new AppError(error.message,500))
+    const allAvailableCars = await CityRate.find({ fromCity: fromLocation, toCity: toLocation });
+
+    if (!allAvailableCars) {
+      return next(new AppError("No Car Available", 404))
     }
+
+    res.status(200).json({
+      success: true,
+      message: "All Car Avaiable",
+      data: allAvailableCars
+    })
+
+
+  } catch (error) {
+    return next(new AppError(error.message, 500))
+  }
 }
 
 
 
-const cancelOneWayBooking = async (req, res, next) => { 
-  try{
-    
+const cancelOneWayBooking = async (req, res, next) => {
+  try {
+
     // authorized for admin left
-     const {id}=req.params
+    const { id } = req.params
 
-     const validBooking=await Booking.findById(id)
+    const validBooking = await Booking.findById(id)
 
-     if(validBooking.status==="cancelled"){
-      return next(new AppError("Booking is canceled already",402))
-     }
+    if (validBooking.status === "cancelled") {
+      return next(new AppError("Booking is canceled already", 402))
+    }
 
-     if(validBooking.status==="ongoing"){
-      return next(new AppError("Booking is onGoing Already",402))
-     }
+    if (validBooking.status === "ongoing") {
+      return next(new AppError("Booking is onGoing Already", 402))
+    }
 
-     if(validBooking.status==="complete"){
-      return next(new AppError("Booking is complete already",402))
-     }
+    if (validBooking.status === "complete") {
+      return next(new AppError("Booking is complete already", 402))
+    }
 
-     validBooking.status="cancelled"
+    validBooking.status = "cancelled"
 
-     await validBooking.save()
-     
-     const subject = 'Your Driver Details Have Been Updated';
-     const text = `Dear Customer,
-     Your Booking is Canceled
- 
- 
- Thank you for using our service.
- 
- Best regards,
- The Team`;
- 
- const validUser=await User.findById(validBooking.userId)
- 
- await sendEmail(validUser.email,subject,text)
+    await validBooking.save()
+
+const subject = 'Booking Cancellation Confirmation - UCS Cabs';
+
+const text = `Dear Customer,
+
+We regret to inform you that your booking with UCS Cabs has been **cancelled**.
+
+────────────────────────────
+📅 Booking Details:
+• Pickup Date: ${validBooking.pickupDate}
+• Pickup Time: ${validBooking.pickupTime}
+• Pickup Location: ${validBooking.pickupAddress || 'N/A'}
+• Drop Location: ${validBooking.dropAddress || 'N/A'}
+• Booking ID: ${validBooking._id}
+
+────────────────────────────
+❗ Cancellation Note:
+Your booking has been cancelled as per the request or due to policy conditions. If you were charged, applicable refund (if any) will be processed as per our cancellation policy.
+
+────────────────────────────
+📌 TERMS AND CONDITIONS
+────────────────────────────
+• Refunds will be processed only if the cancellation is made at least 24 hours prior to the pickup time..  
+• Refunds (if applicable) may take 5–7 business days to reflect.  
+• Please reach out for any clarification or concerns.
+
+────────────────────────────
+📞 Contact Information:
+Website: https://www.ucscabs.com  
+Phone: +91 9358585237  
+Email: info@gmail.com
+
+We apologize for the inconvenience. We hope to serve you again in the future.
+
+Warm regards,  
+**UCS Cabs Support Team**`;
+
+
+    const validUser = await User.findById(validBooking.userId)
+
+    await sendEmail(validUser.email, subject, text)
 
 
 
-     res.status(200).json({
-      success:true,
-      message:"Booking is cancelled succesfully",
-      data:validBooking
-     })
+    res.status(200).json({
+      success: true,
+      message: "Booking is cancelled succesfully",
+      data: validBooking
+    })
 
-  }catch(error){
-    return next(new AppError(error.message,500))
+  } catch (error) {
+    return next(new AppError(error.message, 500))
   }
 
 
@@ -2142,13 +2165,13 @@ const cancelOneWayBooking = async (req, res, next) => {
 const approveBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { adminId, driverDetails} = req.body;
+    const { adminId, driverDetails } = req.body;
 
     // Check if the admin is valid and authorized
     const validAdmin = await Admin.findById(adminId);
 
     console.log(validAdmin);
-    
+
     // if (!validAdmin || !validAdmin.status) {
     //   return next(new AppError("You are not Authorized", 403));
     // }
@@ -2156,20 +2179,20 @@ const approveBooking = async (req, res, next) => {
     // Find the booking to approve
     const validBooking = await Booking.findById(id);
 
-    
-    
+
+
     if (!validBooking) {
       return next(new AppError("Booking Not Found", 404));
-   
+
     }
 
     // Check the booking status and completeness
     if (validBooking.status) {
       return next(new AppError("Booking is already approved", 403));
     }
-    
+
     console.log(validBooking);
-    
+
 
     // if (validBooking.isComplete || validBooking.isCancel) {
     //   return next(new AppError("Booking is completed or canceled, something went wrong", 400));
@@ -2184,14 +2207,14 @@ const approveBooking = async (req, res, next) => {
     // };
 
     console.log(validBooking);
-    
+
 
     validBooking.driverDetails = driverDetails;
     validBooking.status = true;
 
 
     console.log(validBooking);
-    
+
 
     // Save the updated booking
     await validBooking.save();
@@ -2281,8 +2304,8 @@ const approveBooking = async (req, res, next) => {
     // Send email to the admin
     await sendEmail(adminEmail, subject, bookingApprovalMessageForAdmin);
 
-   
-    
+
+
 
     res.status(200).json({
       success: true,
@@ -2298,75 +2321,75 @@ const approveBooking = async (req, res, next) => {
 
 const getAllBooking = async (req, res, next) => {
   try {
-      // Fetch all bookings that are not canceled and have status true
-      const bookings = await Booking.find().populate('userId', 'name email phoneNumber'); // Adjust fields as needed
+    // Fetch all bookings that are not canceled and have status true
+    const bookings = await Booking.find().populate('userId', 'name email phoneNumber'); // Adjust fields as needed
 
-      // console.log(bookings);
-      
+    // console.log(bookings);
 
-      if (bookings.length === 0) {
-          return next(new AppError("No bookings found", 404));
-      }
 
-      res.status(200).json({
-          success: true,
-          message: "Bookings details:",
-          data: bookings
-      });
+    if (bookings.length === 0) {
+      return next(new AppError("No bookings found", 404));
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Bookings details:",
+      data: bookings
+    });
 
   } catch (error) {
-      return next(new AppError(error.message, 500));
+    return next(new AppError(error.message, 500));
   }
 };
 
-const getSingleBooking=async(req,res,next)=>{
-  try{
-    const {id}=req.params
+const getSingleBooking = async (req, res, next) => {
+  try {
+    const { id } = req.params
 
     // const singleBooking=await Booking.findById(id)
     const singleBooking = await Booking.findById(id).populate('userId', 'name email phoneNumber'); // Adjust fields as needed
 
 
-    if(!singleBooking){
-      return next(new AppError("SINGLE BOOKIN NOT FOUND",500))
+    if (!singleBooking) {
+      return next(new AppError("SINGLE BOOKIN NOT FOUND", 500))
     }
 
     res.status(200).json({
-      success:true,
-      message:"All Single Booking",
-      data:singleBooking
+      success: true,
+      message: "All Single Booking",
+      data: singleBooking
     })
 
-  }catch(error){
-    return next(new AppError(error.message,500))
+  } catch (error) {
+    return next(new AppError(error.message, 500))
   }
 }
 
 const bookComplete = async (req, res, next) => {
   try {
     const { id } = req.params;
-    let { extraRates ,extraHours,description} = req.body;
+    let { extraRates, extraHours, description } = req.body;
 
-    console.log(extraRates,extraHours,description);
-    
+    console.log(extraRates, extraHours, description);
+
 
     if (!extraRates) {
       extraRates = 0;
     }
 
-    if(!extraHours){
-      extraHours=0;
+    if (!extraHours) {
+      extraHours = 0;
     }
 
-    
+
     const validBooking = await Booking.findById(id);
 
     // console.log(validBooking);
-    
+
 
     if (!validBooking) {
       console.log("mai aaya hu kya");
-      
+
       return next(new AppError("Booking is not Valid", 404));
     }
 
@@ -2396,45 +2419,74 @@ const bookComplete = async (req, res, next) => {
     if (validBooking.status === "ongoing") {
       validBooking.status = "complete";
       const extraPrice = extraRates * 10;
-      const extraHourRate=extraHours*10;
-      console.log(extraPrice,extraHourRate);
+      const extraHourRate = extraHours * 10;
+      console.log(extraPrice, extraHourRate);
 
       console.log(validBooking);
-      
-      
-      const totalPrice = validBooking?.totalPrice + extraPrice+extraHourRate;
+
+
+      const totalPrice = validBooking?.totalPrice + extraPrice + extraHourRate;
 
       console.log(totalPrice);
-      
-      
+
+
       validBooking.extraKm = extraPrice;
-      validBooking.extraHour=extraHourRate
-      validBooking.extraPerKm=extraRates
-      validBooking.extraPerHour=extraHours
+      validBooking.extraHour = extraHourRate
+      validBooking.extraPerKm = extraRates
+      validBooking.extraPerHour = extraHours
       validBooking.extraPrice = extraPrice;
       validBooking.totalPrice = totalPrice;
 
 
 
-      if(description){
-        validBooking.description=description
+      if (description) {
+        validBooking.description = description
       }
 
       await validBooking.save();
-      console.log(validBooking);
-      
+     
+
     } else {
       return next(new AppError("Booking is Yet Not Ongoing", 400));
     }
 
     const subject = 'Your Booking  Has Been Complete';
     const text = `Dear Customer,
-    Your Booking is completed.
 
-Thank you for using our service.
+We are pleased to inform you that your booking has been successfully completed. Please find the summary of your booking below:
 
-Best regards,
-The Team`;
+────────────────────────────
+📅 Pickup Date: ${validBooking?.pickupDate}
+🕒 Pickup Time: ${validBooking?.pickupTime}
+🚗 Car Number: ${validBooking?.driverDetails?.find(d => d.isActive)?.carNumber || 'N/A'}
+👨‍✈️ Driver: ${validBooking?.driverDetails?.find(d => d.isActive)?.name || 'N/A'}
+
+────────────────────────────
+💵 Fare Details:
+Base Fare: ₹${validBooking.totalPrice - validBooking.extraKm - validBooking.extraHour}
+Extra Kilometers: ${validBooking.extraPerKm} km × ₹10 = ₹${validBooking.extraKm}
+Extra Hours: ${validBooking.extraPerHour} hr × ₹10 = ₹${validBooking.extraHour}
+📌 Total Price: ₹${validBooking.totalPrice}
+${validBooking.description ? `\n📋 Note: ${validBooking.description}` : ''}
+
+────────────────────────────
+📌 TERMS AND CONDITIONS
+────────────────────────────
+• Additional charges may apply for extra hours or kilometers.  
+• Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.  
+• The vehicle must be returned in clean condition.  
+• Any damages to the vehicle during the trip will be charged.  
+
+────────────────────────────
+📞 Contact Information:
+Website: https://www.ucscabs.com  
+Phone: +91 9358585237  
+Email: info@gmail.com
+
+Thank you for choosing UCS Cabs. We hope to serve you again soon!
+
+Best regards,  
+UCS Cabs Support Team`;
 
     const validUser = await User.findById(validBooking.userId);
     await sendEmail(validUser.email, subject, text);
@@ -2455,8 +2507,8 @@ const driverDetail = async (req, res, next) => {
     const { name, email, phoneNumber, carNumber } = req.body;
     const { id } = req.params;
 
-    console.log(req.body);
-    
+
+
 
     if (!name || !email || !phoneNumber) {
       return next(new AppError("All fields are required", 400));
@@ -2489,17 +2541,36 @@ const driverDetail = async (req, res, next) => {
 
     // Send email to user
     const subject = 'Your Driver Details Have Been Updated';
-    const text = `Dear Customer,
-    Your driver details have been updated successfully.
-Driver Name: ${name}
-Phone Number: ${phoneNumber}
-Email: ${email}
+    const text = `Dear ${name},
+
+We are pleased to inform you that your driver details have been successfully updated in our records. Please find the updated information below:
+
+Driver Name: ${name}  
+Phone Number: ${phoneNumber}  
+Email: ${email}  
 Car Number: ${carNumber}
 
-Thank you for using our service.
+──────────────────────────────
+TERMS AND CONDITIONS
+──────────────────────────────
+• Additional charges may apply for extra hours or kilometers.  
+• Booking cancellations made less than 24 hours before the pickup time will incur a 50% cancellation fee.  
+• The vehicle must be returned in clean condition.  
+• Any damages to the vehicle during the trip will be charged accordingly.  
 
-Best regards,
-The Team`;
+We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at **info@ucscab.com**.
+
+──────────────────────────────
+Contact Information:
+──────────────────────────────
+Website: https://www.ucscabs.com  
+Phone: +91 9358585237  
+Email: info@gmail.com
+
+Thank you for choosing UCS Cabs! We wish you a pleasant trip.
+
+Best regards,  
+UCS Cabs Support Team`;
 
     const validUser = await User.findById(validBooking.userId);
 
@@ -2519,50 +2590,50 @@ The Team`;
   }
 }
 
-const updateRate=async(req,res,next)=>{
-  try{
-    const {id}=req.params
-    const {extraRates}=req.body
+const updateRate = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { extraRates } = req.body
 
     console.log(extraRates);
 
-    if(!extraRates){
-      return next(new AppError("Extra Rates is Required",404))
+    if (!extraRates) {
+      return next(new AppError("Extra Rates is Required", 404))
     }
-    
-    const validBooking=await Booking.findById(id)
 
-    if(!validBooking){
-      return next(new AppError("Booking is not Valid",400))
+    const validBooking = await Booking.findById(id)
+
+    if (!validBooking) {
+      return next(new AppError("Booking is not Valid", 400))
     }
-   
-    if(!validBooking.status==="confirmed"){
+
+    if (!validBooking.status === "confirmed") {
       return next(new AppError("Booking is not Confirmed"))
     }
 
-    const extraPrice=extraRates*10
+    const extraPrice = extraRates * 10
 
-    const totalPrice=validBooking.totalPrice+extraPrice
+    const totalPrice = validBooking.totalPrice + extraPrice
 
-    validBooking.extraKm=extraRates
-    validBooking.extraPrice=extraPrice
-    validBooking.totalPrice=totalPrice
+    validBooking.extraKm = extraRates
+    validBooking.extraPrice = extraPrice
+    validBooking.totalPrice = totalPrice
 
     validBooking.save()
 
     res.status(200).json({
-      success:true,
-      message:"Rate Updated Succesfully",
-      data:validBooking
+      success: true,
+      message: "Rate Updated Succesfully",
+      data: validBooking
     })
 
 
-  }catch(error){
-     return next(new AppError(error.message,500))
+  } catch (error) {
+    return next(new AppError(error.message, 500))
   }
 }
 
- const getBookingsNearCurrentTime = async (req, res) => {
+const getBookingsNearCurrentTime = async (req, res) => {
   const { userId } = req.params;
 
   const now = new Date();
@@ -2626,20 +2697,20 @@ const updateRate=async(req,res,next)=>{
 
 
 export {
-    addOneWayBooking,
-    getOneWayBooking,
-    cancelOneWayBooking,
-    getAllBooking,
-    approveBooking,
-    getSingleBooking,
-    bookComplete,
-    verifyOneWayBooking,
-    driverDetail,
-    updateRate,
-    addLocalTripBooking,
-    addAirpotBooking,
-    addRoundTripBooking,
-    getDistanceBetweenAirports,
-    getDistanceBetweenLocation,
-    getBookingsNearCurrentTime
+  addOneWayBooking,
+  getOneWayBooking,
+  cancelOneWayBooking,
+  getAllBooking,
+  approveBooking,
+  getSingleBooking,
+  bookComplete,
+  verifyOneWayBooking,
+  driverDetail,
+  updateRate,
+  addLocalTripBooking,
+  addAirpotBooking,
+  addRoundTripBooking,
+  getDistanceBetweenAirports,
+  getDistanceBetweenLocation,
+  getBookingsNearCurrentTime
 }
