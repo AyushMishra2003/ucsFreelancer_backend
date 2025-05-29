@@ -2105,42 +2105,32 @@ const cancelOneWayBooking = async (req, res, next) => {
 
     await validBooking.save()
 
-const subject = 'Booking Cancellation Confirmation - UCS Cabs';
+ 
+const subject = 'Your Booking Has Been Cancelled';
 
-const text = `Dear Customer,
+const text = `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p>Dear <strong>Customer</strong>,</p>
 
-We regret to inform you that your booking with UCS Cabs has been **cancelled**.
+    <p>We regret to inform you that your booking has been <strong>cancelled</strong> as per your request or due to a specific condition.</p>
 
-────────────────────────────
-📅 Booking Details:
-• Pickup Date: ${validBooking.pickupDate}
-• Pickup Time: ${validBooking.pickupTime}
-• Pickup Location: ${validBooking.pickupAddress || 'N/A'}
-• Drop Location: ${validBooking.dropAddress || 'N/A'}
-• Booking ID: ${validBooking._id}
+    <p>If this cancellation was unintentional or if you would like to make a new booking, please feel free to reach out to us at any time. Our team is here to assist you with your travel needs.</p>
 
-────────────────────────────
-❗ Cancellation Note:
-Your booking has been cancelled as per the request or due to policy conditions. If you were charged, applicable refund (if any) will be processed as per our cancellation policy.
+    <h3>Need Help?</h3>
+    <p>For further information or support, you can contact us at:</p>
+    <ul>
+      <li><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">www.ucscabs.com</a></li>
+      <li><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></li>
+      <li><strong>Phone:</strong> +91 9358585237</li>
+    </ul>
 
-────────────────────────────
-📌 TERMS AND CONDITIONS
-────────────────────────────
-• Refunds will be processed only if the cancellation is made at least 24 hours prior to the pickup time..  
-• Refunds (if applicable) may take 5–7 business days to reflect.  
-• Please reach out for any clarification or concerns.
+    <p>We truly appreciate your interest in UCS Cabs and hope to serve you in the future under better circumstances.</p>
 
-────────────────────────────
-📞 Contact Information:
-Website: https://www.ucscabs.com  
-Phone: +91 9358585237  
-Email: info@gmail.com
-
-We apologize for the inconvenience. We hope to serve you again in the future.
-
-Warm regards,  
-**UCS Cabs Support Team**`;
-
+    <br />
+    <p>Thank you for choosing UCS Cabs.</p>
+    <p>Best regards,<br /><strong>UCS Cabs Support Team</strong></p>
+  </div>
+`;
 
     const validUser = await User.findById(validBooking.userId)
 
@@ -2451,42 +2441,80 @@ const bookComplete = async (req, res, next) => {
     }
 
     const subject = 'Your Booking  Has Been Complete';
-    const text = `Dear Customer,
+const text = `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p>Dear <strong>Customer</strong>,</p>
 
-We are pleased to inform you that your booking has been successfully completed. Please find the summary of your booking below:
+    <p>We are pleased to inform you that your booking has been successfully completed. Please find the summary of your booking below:</p>
 
-────────────────────────────
-📅 Pickup Date: ${validBooking?.pickupDate}
-🕒 Pickup Time: ${validBooking?.pickupTime}
-🚗 Car Number: ${validBooking?.driverDetails?.find(d => d.isActive)?.carNumber || 'N/A'}
-👨‍✈️ Driver: ${validBooking?.driverDetails?.find(d => d.isActive)?.name || 'N/A'}
+    <h3>📅 Booking Summary</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tbody>
+        <tr>
+          <td style="padding: 8px;"><strong>Pickup Date:</strong></td>
+          <td style="padding: 8px;">${validBooking?.pickupDate}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;"><strong>Pickup Time:</strong></td>
+          <td style="padding: 8px;">${validBooking?.pickupTime}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;"><strong>Car Number:</strong></td>
+          <td style="padding: 8px;">${validBooking?.driverDetails?.find(d => d.isActive)?.carNumber || 'N/A'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;"><strong>Driver:</strong></td>
+          <td style="padding: 8px;">${validBooking?.driverDetails?.find(d => d.isActive)?.name || 'N/A'}</td>
+        </tr>
+      </tbody>
+    </table>
 
-────────────────────────────
-💵 Fare Details:
-Base Fare: ₹${validBooking.totalPrice - validBooking.extraKm - validBooking.extraHour}
-Extra Kilometers: ${validBooking.extraPerKm} km × ₹10 = ₹${validBooking.extraKm}
-Extra Hours: ${validBooking.extraPerHour} hr × ₹10 = ₹${validBooking.extraHour}
-📌 Total Price: ₹${validBooking.totalPrice}
-${validBooking.description ? `\n📋 Note: ${validBooking.description}` : ''}
+    <h3>💵 Fare Details</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+      <tbody>
+        <tr>
+          <td style="padding: 8px;">Base Fare:</td>
+          <td style="padding: 8px;">₹${validBooking.totalPrice - validBooking.extraKm - validBooking.extraHour}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;">Extra Kilometers:</td>
+          <td style="padding: 8px;">${validBooking.extraPerKm} km × ₹10 = ₹${validBooking.extraKm}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;">Extra Hours:</td>
+          <td style="padding: 8px;">${validBooking.extraPerHour} hr × ₹10 = ₹${validBooking.extraHour}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px;"><strong>Total Price:</strong></td>
+          <td style="padding: 8px;"><strong>₹${validBooking.totalPrice}</strong></td>
+        </tr>
+        ${
+          validBooking.description
+            ? `<tr><td style="padding: 8px;"><strong>Note:</strong></td><td style="padding: 8px;">${validBooking.description}</td></tr>`
+            : ''
+        }
+      </tbody>
+    </table>
 
-────────────────────────────
-📌 TERMS AND CONDITIONS
-────────────────────────────
-• Additional charges may apply for extra hours or kilometers.  
-• Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.  
-• The vehicle must be returned in clean condition.  
-• Any damages to the vehicle during the trip will be charged.  
+    <h3>📌 Terms and Conditions</h3>
+    <ul style="line-height: 1.6;">
+      <li>Additional charges may apply for extra hours or kilometers.</li>
+      <li>Booking cancellations less than 24 hours prior to pickup will incur a 50% fee.</li>
+      <li>The vehicle must be returned in clean condition.</li>
+      <li>Any damages to the vehicle during the trip will be charged.</li>
+    </ul>
 
-────────────────────────────
-📞 Contact Information:
-Website: https://www.ucscabs.com  
-Phone: +91 9358585237  
-Email: info@gmail.com
+    <h3>📞 Contact Information</h3>
+    <p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+    <p><strong>Phone:</strong> +91 9358585237</p>
+    <p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
 
-Thank you for choosing UCS Cabs. We hope to serve you again soon!
+    <br>
 
-Best regards,  
-UCS Cabs Support Team`;
+    <p>Thank you for choosing UCS Cabs. We hope to serve you again soon!</p>
+    <p>Best regards,<br><strong>UCS Cabs Support Team</strong></p>
+  </div>
+`;
 
     const validUser = await User.findById(validBooking.userId);
     await sendEmail(validUser.email, subject, text);
@@ -2541,41 +2569,48 @@ const driverDetail = async (req, res, next) => {
 
     // Send email to user
     const subject = 'Your Driver Details Have Been Updated';
-    const text = `Dear ${name},
+const driverUpdateMessage = `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <p>Dear <strong>${name}</strong>,</p>
 
-We are pleased to inform you that your driver details have been successfully updated in our records. Please find the updated information below:
+    <p>We are pleased to inform you that your driver details have been successfully updated in our records. Please find the updated information below:</p>
 
-Driver Name: ${name}  
-Phone Number: ${phoneNumber}  
-Email: ${email}  
-Car Number: ${carNumber}
+    <h3>Driver Details</h3>
+    <p><strong>Driver Name:</strong> ${name}</p>
+    <p><strong>Phone Number:</strong> ${phoneNumber}</p>
+    <p><strong>Email:</strong> ${email}</p>
+    <p><strong>Car Number:</strong> ${carNumber}</p>
 
-──────────────────────────────
-TERMS AND CONDITIONS
-──────────────────────────────
-• Additional charges may apply for extra hours or kilometers.  
-• Booking cancellations made less than 24 hours before the pickup time will incur a 50% cancellation fee.  
-• The vehicle must be returned in clean condition.  
-• Any damages to the vehicle during the trip will be charged accordingly.  
+    <h3>Terms and Conditions</h3>
+    <ul style="line-height: 1.6;">
+      <li>Additional charges may apply for extra hours or kilometers.</li>
+      <li>Booking cancellations made less than 24 hours before the pickup time will incur a <strong>50% cancellation fee</strong>.</li>
+      <li>The vehicle must be returned in clean condition.</li>
+      <li>Any damages to the vehicle during the trip will be charged accordingly.</li>
+    </ul>
 
-We continuously strive to enhance your experience with our company, and your feedback is important to us. In case of any suggestions or complaints, feel free to drop us an email at **info@ucscab.com**.
+    <p>We continuously strive to enhance your experience with our company, and your feedback is important to us.</p>
+    <p>In case of any suggestions or complaints, feel free to email us at 
+      <a href="mailto:info@ucscab.com" style="color: #0066cc;">info@ucscab.com</a>.
+    </p>
 
-──────────────────────────────
-Contact Information:
-──────────────────────────────
-Website: https://www.ucscabs.com  
-Phone: +91 9358585237  
-Email: info@gmail.com
+    <h3>Contact Information</h3>
+    <p><strong>Website:</strong> <a href="https://www.ucscabs.com" style="color: #0066cc;">https://www.ucscabs.com</a></p>
+    <p><strong>Phone:</strong> +91 9358585237</p>
+    <p><strong>Email:</strong> <a href="mailto:info@gmail.com" style="color: #0066cc;">info@gmail.com</a></p>
 
-Thank you for choosing UCS Cabs! We wish you a pleasant trip.
+    <br>
 
-Best regards,  
-UCS Cabs Support Team`;
+    <p>Thank you for choosing UCS Cabs! We wish you a pleasant trip.</p>
+    <p>Best regards,<br><strong>UCS Cabs Support Team</strong></p>
+  </div>
+`;
+
 
     const validUser = await User.findById(validBooking.userId);
 
     if (validUser && validUser.email) {
-      await sendEmail(validUser.email, subject, text);
+      await sendEmail(validUser.email, subject, driverUpdateMessage);
     }
 
     await validBooking.save();
